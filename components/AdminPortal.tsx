@@ -1,0 +1,657 @@
+"use client";
+
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import {
+  LayoutDashboard, Stethoscope, Pill, Building2, Bell,
+  Settings, LogOut, Menu, X, Heart, Users, FileText,
+  TrendingUp, Shield, CheckCircle, XCircle, Clock,
+  Eye, Download, Search, Filter, AlertCircle, User,
+  Activity, DollarSign, BarChart2, Star, Upload, Check,
+  ChevronRight, ShoppingCart
+} from 'lucide-react';
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer
+} from 'recharts';
+
+type AdminView = 'overview' | 'doctors' | 'pharmacists' | 'pharmacies' | 'analytics' | 'notifications' | 'settings';
+
+interface AdminPortalProps {
+  onBack: () => void;
+}
+
+const dailyPrescriptions = [
+  { date: 'Jan 10', count: 245 }, { date: 'Jan 11', count: 312 },
+  { date: 'Jan 12', count: 289 }, { date: 'Jan 13', count: 358 },
+  { date: 'Jan 14', count: 401 }, { date: 'Jan 15', count: 376 },
+  { date: 'Jan 16', count: 428 },
+];
+
+const monthlyRevenue = [
+  { month: 'Aug', revenue: 1450000 }, { month: 'Sep', revenue: 1620000 },
+  { month: 'Oct', revenue: 1580000 }, { month: 'Nov', revenue: 1780000 },
+  { month: 'Dec', revenue: 1920000 }, { month: 'Jan', revenue: 2150000 },
+];
+
+const topDoctors = [
+  { name: 'Dr. Rajesh Kumar', prescriptions: 142 },
+  { name: 'Dr. Anjali Patel', prescriptions: 128 },
+  { name: 'Dr. Vikram Singh', prescriptions: 115 },
+  { name: 'Dr. Meena Rao', prescriptions: 98 },
+  { name: 'Dr. Arjun Nair', prescriptions: 87 },
+];
+
+const categoryData = [
+  { name: 'Cardiac', value: 28, color: '#FF6B6B' },
+  { name: 'Diabetes', value: 22, color: '#2563EB' },
+  { name: 'Antibiotics', value: 18, color: '#00B894' },
+  { name: 'Pain Relief', value: 15, color: '#F59E0B' },
+  { name: 'Thyroid', value: 10, color: '#8B5CF6' },
+  { name: 'Others', value: 7, color: '#EC4899' },
+];
+
+const doctors = [
+  { id: 'D001', name: 'Dr. Prateek Sharma', regNo: 'MCI-2020-DL-45678', hospital: 'AIIMS Delhi', specialization: 'Neurology', licenseFile: 'license_prateek.pdf', status: 'Pending' },
+  { id: 'D002', name: 'Dr. Kavita Menon', regNo: 'MCI-2019-KL-12345', hospital: 'Amrita Hospital', specialization: 'Dermatology', licenseFile: 'license_kavita.pdf', status: 'Under Review' },
+  { id: 'D003', name: 'Dr. Sunil Verma', regNo: 'MCI-2018-MH-67890', hospital: 'Nanavati Hospital', specialization: 'Orthopedics', licenseFile: 'license_sunil.pdf', status: 'Verified' },
+  { id: 'D004', name: 'Dr. Ananya Bose', regNo: 'MCI-2021-WB-23456', hospital: 'SSKM Hospital', specialization: 'Pediatrics', licenseFile: 'license_ananya.pdf', status: 'Pending' },
+  { id: 'D005', name: 'Dr. Rohit Nair', regNo: 'MCI-2017-KA-78901', hospital: 'Manipal Hospital', specialization: 'General Medicine', licenseFile: 'license_rohit.pdf', status: 'Rejected' },
+];
+
+const pharmacists = [
+  { id: 'PH001', name: 'Rahul Mehta', pharmacyLicense: 'PCI-GJ-2019-34567', regNo: 'PCI-GJ-56789', experience: '6 years', status: 'Pending' },
+  { id: 'PH002', name: 'Sunita Nair', pharmacyLicense: 'PCI-KL-2018-45678', regNo: 'PCI-KL-67890', experience: '9 years', status: 'Under Review' },
+  { id: 'PH003', name: 'Ajay Patel', pharmacyLicense: 'PCI-MH-2020-56789', regNo: 'PCI-MH-78901', experience: '4 years', status: 'Verified' },
+  { id: 'PH004', name: 'Deepa Krishnan', pharmacyLicense: 'PCI-TN-2021-67890', regNo: 'PCI-TN-89012', experience: '2 years', status: 'Pending' },
+  { id: 'PH005', name: 'Manish Gupta', pharmacyLicense: 'PCI-UP-2016-78901', regNo: 'PCI-UP-90123', experience: '12 years', status: 'Verified' },
+];
+
+const pharmacies = [
+  { id: 'PH001', name: 'Apollo Pharmacy', drugLicense: 'DL-KA-2019-12345', gst: '29AAACX1234A1Z5', address: 'MG Road, Bangalore', owner: 'Suresh Reddy', status: 'Pending' },
+  { id: 'PH002', name: 'MedPlus Stores', drugLicense: 'DL-KA-2018-23456', gst: '29AABCX2345A1Z6', address: 'Koramangala, Bangalore', owner: 'Venkat Rao', status: 'Verified' },
+  { id: 'PH003', name: 'LifeCare Pharmacy', drugLicense: 'DL-MH-2020-34567', gst: '27AACCX3456A1Z7', address: 'Andheri, Mumbai', owner: 'Rajesh Shah', status: 'Under Review' },
+  { id: 'PH004', name: 'Health First', drugLicense: 'DL-DL-2021-45678', gst: '07AAADX4567A1Z8', address: 'Connaught Place, Delhi', owner: 'Amit Kumar', status: 'Pending' },
+];
+
+const adminNotifications = [
+  { id: 1, title: 'New Doctor Registration', body: 'Dr. Prateek Sharma (Neurology) submitted verification documents', time: '10 min ago', read: false, color: '#2563EB' },
+  { id: 2, title: 'License Expiry Alert', body: 'Apollo Pharmacy drug license expires in 30 days', time: '1 hour ago', read: false, color: '#F59E0B' },
+  { id: 3, title: 'New Pharmacy Registration', body: 'HealthCare Plus pharmacy applied for verification', time: '2 hours ago', read: false, color: '#00B894' },
+  { id: 4, title: 'Verification Request', body: 'Sunita Nair (Pharmacist) documents ready for review', time: '3 hours ago', read: true, color: '#8B5CF6' },
+  { id: 5, title: 'System Alert', body: 'Daily prescription count exceeded 400 — new record!', time: '5 hours ago', read: true, color: '#22C55E' },
+];
+
+const statusColor = (status: string) => {
+  const map: Record<string, { bg: string; text: string }> = {
+    Pending: { bg: '#FFFBEB', text: '#F59E0B' },
+    'Under Review': { bg: '#EFF6FF', text: '#2563EB' },
+    Verified: { bg: '#F0FDF4', text: '#22C55E' },
+    Rejected: { bg: '#FFF5F5', text: '#FF6B6B' },
+  };
+  return map[status] || { bg: '#F9FAFB', text: '#6B7280' };
+};
+
+const statusIcon = (status: string) => {
+  if (status === 'Verified') return <CheckCircle className="w-3.5 h-3.5" />;
+  if (status === 'Rejected') return <XCircle className="w-3.5 h-3.5" />;
+  if (status === 'Under Review') return <Eye className="w-3.5 h-3.5" />;
+  return <Clock className="w-3.5 h-3.5" />;
+};
+
+export function AdminPortal({ onBack }: AdminPortalProps) {
+  const [activeView, setActiveView] = useState<AdminView>('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [doctorList, setDoctorList] = useState(doctors);
+  const [pharmList, setPharmList] = useState(pharmacists);
+  const [pharmacyList, setPharmacyList] = useState(pharmacies);
+  const [notifList, setNotifList] = useState(adminNotifications);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const navItems = [
+    { id: 'overview' as AdminView, label: 'Overview', icon: LayoutDashboard },
+    { id: 'doctors' as AdminView, label: 'Doctor Verification', icon: Stethoscope, badge: doctorList.filter(d => d.status === 'Pending').length },
+    { id: 'pharmacists' as AdminView, label: 'Pharmacist Verification', icon: Pill, badge: pharmList.filter(p => p.status === 'Pending').length },
+    { id: 'pharmacies' as AdminView, label: 'Pharmacy Verification', icon: Building2, badge: pharmacyList.filter(p => p.status === 'Pending').length },
+    { id: 'analytics' as AdminView, label: 'Analytics', icon: TrendingUp },
+    { id: 'notifications' as AdminView, label: 'Notifications', icon: Bell, badge: notifList.filter(n => !n.read).length },
+    { id: 'settings' as AdminView, label: 'Settings', icon: Settings },
+  ];
+
+  const Sidebar = () => (
+    <div style={{ backgroundColor: '#1A1A2E', width: '260px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="p-4 flex items-center justify-between border-b" style={{ borderColor: '#2D2D4E' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#FF6B6B' }}>
+            <Heart className="w-4 h-4 text-white" />
+          </div>
+          <span style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>Medi<span style={{ color: '#FF6B6B' }}>Track</span></span>
+        </div>
+        <button className="lg:hidden text-gray-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="p-4 border-b" style={{ borderColor: '#2D2D4E' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FF6B6B' }}>
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p style={{ color: 'white', fontWeight: 600, fontSize: '0.875rem' }}>Super Admin</p>
+            <p style={{ color: '#94A3B8', fontSize: '0.75rem' }}>admin@meditrack.in</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-1">
+        {navItems.map(item => (
+          <button key={item.id}
+            onClick={() => { setActiveView(item.id); setSidebarOpen(false); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
+            style={{ backgroundColor: activeView === item.id ? '#FF6B6B' : 'transparent', color: activeView === item.id ? 'white' : '#94A3B8' }}
+            onMouseEnter={e => { if (activeView !== item.id) e.currentTarget.style.backgroundColor = '#2D2D4E'; }}
+            onMouseLeave={e => { if (activeView !== item.id) e.currentTarget.style.backgroundColor = 'transparent'; }}>
+            <item.icon className="w-4 h-4 shrink-0" />
+            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: activeView === item.id ? 'rgba(255,255,255,0.25)' : '#FF6B6B', color: 'white', minWidth: '20px', textAlign: 'center' }}>
+                {item.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      <div className="p-4 border-t" style={{ borderColor: '#2D2D4E' }}>
+        <button onClick={onBack} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-900/20 transition-colors">
+          <LogOut className="w-4 h-4" />
+          <span style={{ fontSize: '0.875rem' }}>Back to Home</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  const OverviewView = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Admin Overview</h2>
+        <p style={{ color: '#6B7280', fontSize: '0.875rem' }}>Platform performance at a glance</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Doctors', value: '1,248', icon: Stethoscope, color: '#2563EB', bg: '#EFF6FF', change: '+12 this month' },
+          { label: 'Total Pharmacists', value: '856', icon: Pill, color: '#00B894', bg: '#F0FDF4', change: '+8 this month' },
+          { label: 'Total Pharmacies', value: '432', icon: Building2, color: '#8B5CF6', bg: '#F5F3FF', change: '+5 this month' },
+          { label: 'Total Patients', value: '52,840', icon: Users, color: '#F59E0B', bg: '#FFFBEB', change: '+340 this week' },
+          { label: 'Total Prescriptions', value: '3.2M', icon: FileText, color: '#FF6B6B', bg: '#FFF5F5', change: '+428 today' },
+          { label: 'Total Orders', value: '1.8M', icon: ShoppingCart, color: '#22C55E', bg: '#F0FDF4', change: '+156 today' },
+          { label: 'Monthly Revenue', value: '₹21.5L', icon: DollarSign, color: '#EC4899', bg: '#FDF2F8', change: '+18% vs last month' },
+          { label: 'Active Users', value: '12,450', icon: Activity, color: '#06B6D4', bg: '#F0FDFF', change: '+8% this week' },
+        ].map((stat, i) => (
+          <Card key={i} className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: stat.bg }}>
+                  <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+                </div>
+                <TrendingUp className="w-4 h-4" style={{ color: '#22C55E' }} />
+              </div>
+              <p style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1A1A2E', lineHeight: 1 }}>{stat.value}</p>
+              <p style={{ color: '#6B7280', fontSize: '0.75rem', marginTop: '0.25rem' }}>{stat.label}</p>
+              <p style={{ color: stat.color, fontSize: '0.7rem', marginTop: '0.5rem' }}>{stat.change}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Daily Prescriptions (Last 7 Days)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={dailyPrescriptions}>
+                <defs>
+                  <linearGradient id="adminGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop key="stop-1" offset="5%" stopColor="#FF6B6B" stopOpacity={0.2} />
+                    <stop key="stop-2" offset="95%" stopColor="#FF6B6B" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                <Area type="monotone" dataKey="count" stroke="#FF6B6B" strokeWidth={2} fill="url(#adminGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Prescription Categories</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={categoryData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value" paddingAngle={3}>
+                  {categoryData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                </Pie>
+                <Tooltip />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '0.75rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Pending Verifications</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { type: 'Doctor', count: doctorList.filter(d => d.status === 'Pending').length, color: '#2563EB', icon: Stethoscope, view: 'doctors' as AdminView },
+              { type: 'Pharmacist', count: pharmList.filter(p => p.status === 'Pending').length, color: '#00B894', icon: Pill, view: 'pharmacists' as AdminView },
+              { type: 'Pharmacy', count: pharmacyList.filter(p => p.status === 'Pending').length, color: '#8B5CF6', icon: Building2, view: 'pharmacies' as AdminView },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl cursor-pointer hover:opacity-80"
+                style={{ backgroundColor: item.color + '10' }}
+                onClick={() => setActiveView(item.view)}>
+                <div className="flex items-center gap-2">
+                  <item.icon className="w-4 h-4" style={{ color: item.color }} />
+                  <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#374151' }}>{item.type} Verification</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor: item.color, color: 'white' }}>{item.count} pending</span>
+                  <ChevronRight className="w-4 h-4" style={{ color: item.color }} />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Top Performing Doctors</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {topDoctors.map((doc, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span style={{ fontSize: '0.8rem', color: '#9CA3AF', minWidth: '16px' }}>{i + 1}</span>
+                <div className="flex-1">
+                  <p style={{ fontWeight: 600, fontSize: '0.8rem', color: '#1A1A2E' }}>{doc.name}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: '#F3F4F6' }}>
+                      <div className="h-full rounded-full" style={{ backgroundColor: '#2563EB', width: `${(doc.prescriptions / 150) * 100}%` }}></div>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: '#9CA3AF', minWidth: '50px', textAlign: 'right' }}>{doc.prescriptions} Rx</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const VerificationTable = ({
+    data, onVerify, onReject, columns
+  }: {
+    data: Array<Record<string, string>>,
+    onVerify: (id: string) => void,
+    onReject: (id: string) => void,
+    columns: Array<{ key: string; label: string }>,
+  }) => (
+    <Card className="border-0 shadow-sm">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E5E7EB' }}>
+                {columns.map(col => (
+                  <th key={col.key} className="px-4 py-3 text-left" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6B7280', whiteSpace: 'nowrap' }}>{col.label}</th>
+                ))}
+                <th className="px-4 py-3 text-left" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6B7280' }}>Status</th>
+                <th className="px-4 py-3 text-left" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6B7280' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, i) => (
+                <tr key={row.id} style={{ borderBottom: i < data.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                  {columns.map(col => (
+                    <td key={col.key} className="px-4 py-3" style={{ fontSize: '0.8rem', color: col.key === 'name' ? '#1A1A2E' : '#6B7280', fontWeight: col.key === 'name' ? 600 : 400, whiteSpace: 'nowrap' }}>
+                      {col.key === 'licenseFile' ? (
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1">
+                          <Download className="w-3 h-3" /> View
+                        </Button>
+                      ) : row[col.key]}
+                    </td>
+                  ))}
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full"
+                      style={{ backgroundColor: statusColor(row.status).bg, color: statusColor(row.status).text }}>
+                      {statusIcon(row.status)} {row.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      {row.status !== 'Verified' && (
+                        <Button size="sm" onClick={() => onVerify(row.id)} style={{ backgroundColor: '#22C55E', height: '28px', fontSize: '0.75rem', gap: '4px' }} className="text-white px-2">
+                          <Check className="w-3 h-3" /> Verify
+                        </Button>
+                      )}
+                      {row.status !== 'Rejected' && (
+                        <Button size="sm" variant="outline" onClick={() => onReject(row.id)} className="border-red-200 text-red-500 hover:bg-red-50 h-7 px-2 text-xs gap-1">
+                          <XCircle className="w-3 h-3" /> Reject
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const DoctorsView = () => {
+    const filtered = doctorList.filter(d =>
+      d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.specialization.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Doctor Verification</h2>
+            <p style={{ color: '#6B7280', fontSize: '0.875rem' }}>
+              <span className="text-yellow-600 font-medium">{doctorList.filter(d => d.status === 'Pending').length} Pending</span>
+              {' · '}
+              <span style={{ color: '#2563EB' }}>{doctorList.filter(d => d.status === 'Under Review').length} Under Review</span>
+              {' · '}
+              <span style={{ color: '#22C55E' }}>{doctorList.filter(d => d.status === 'Verified').length} Verified</span>
+            </p>
+          </div>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
+            <Input placeholder="Search doctors..." className="pl-9" style={{ width: '220px' }} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-2">
+          {[
+            { label: 'Pending', count: doctorList.filter(d => d.status === 'Pending').length, color: '#F59E0B', bg: '#FFFBEB' },
+            { label: 'Under Review', count: doctorList.filter(d => d.status === 'Under Review').length, color: '#2563EB', bg: '#EFF6FF' },
+            { label: 'Verified', count: doctorList.filter(d => d.status === 'Verified').length, color: '#22C55E', bg: '#F0FDF4' },
+          ].map((s, i) => (
+            <div key={i} className="p-3 rounded-xl text-center" style={{ backgroundColor: s.bg }}>
+              <p style={{ fontSize: '1.5rem', fontWeight: 800, color: s.color }}>{s.count}</p>
+              <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <VerificationTable
+          data={filtered}
+          onVerify={id => setDoctorList(l => l.map(d => d.id === id ? { ...d, status: 'Verified' } : d))}
+          onReject={id => setDoctorList(l => l.map(d => d.id === id ? { ...d, status: 'Rejected' } : d))}
+          columns={[
+            { key: 'name', label: 'Doctor Name' },
+            { key: 'regNo', label: 'Registration No.' },
+            { key: 'hospital', label: 'Hospital' },
+            { key: 'specialization', label: 'Specialization' },
+            { key: 'licenseFile', label: 'License' },
+          ]}
+        />
+      </div>
+    );
+  };
+
+  const PharmacistsView = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Pharmacist Verification</h2>
+          <p style={{ color: '#6B7280', fontSize: '0.875rem' }}>
+            <span className="text-yellow-600 font-medium">{pharmList.filter(p => p.status === 'Pending').length} Pending</span>
+            {' · '}
+            <span style={{ color: '#22C55E' }}>{pharmList.filter(p => p.status === 'Verified').length} Verified</span>
+          </p>
+        </div>
+      </div>
+      <VerificationTable
+        data={pharmList}
+        onVerify={id => setPharmList(l => l.map(p => p.id === id ? { ...p, status: 'Verified' } : p))}
+        onReject={id => setPharmList(l => l.map(p => p.id === id ? { ...p, status: 'Rejected' } : p))}
+        columns={[
+          { key: 'name', label: 'Pharmacist Name' },
+          { key: 'pharmacyLicense', label: 'Pharmacy License' },
+          { key: 'regNo', label: 'Registration No.' },
+          { key: 'experience', label: 'Experience' },
+          { key: 'licenseFile', label: 'Documents' },
+        ]}
+      />
+    </div>
+  );
+
+  const PharmaciesView = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Pharmacy Verification</h2>
+        <p style={{ color: '#6B7280', fontSize: '0.875rem' }}>
+          <span className="text-yellow-600 font-medium">{pharmacyList.filter(p => p.status === 'Pending').length} Pending</span>
+          {' · '}
+          <span style={{ color: '#22C55E' }}>{pharmacyList.filter(p => p.status === 'Verified').length} Verified</span>
+        </p>
+      </div>
+      <VerificationTable
+        data={pharmacyList}
+        onVerify={id => setPharmacyList(l => l.map(p => p.id === id ? { ...p, status: 'Verified' } : p))}
+        onReject={id => setPharmacyList(l => l.map(p => p.id === id ? { ...p, status: 'Rejected' } : p))}
+        columns={[
+          { key: 'name', label: 'Pharmacy Name' },
+          { key: 'drugLicense', label: 'Drug License' },
+          { key: 'gst', label: 'GST Number' },
+          { key: 'address', label: 'Address' },
+          { key: 'owner', label: 'Owner' },
+        ]}
+      />
+    </div>
+  );
+
+  const AnalyticsView = () => (
+    <div className="space-y-6">
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Analytics Dashboard</h2>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Daily Prescriptions Trend</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={dailyPrescriptions}>
+                <defs>
+                  <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop key="stop-1" offset="5%" stopColor="#FF6B6B" stopOpacity={0.2} />
+                    <stop key="stop-2" offset="95%" stopColor="#FF6B6B" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                <Area type="monotone" dataKey="count" stroke="#FF6B6B" strokeWidth={2} fill="url(#grad1)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Monthly Revenue</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={monthlyRevenue}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 100000).toFixed(1)}L`} />
+                <Tooltip formatter={(v: number) => [`₹${(v / 100000).toFixed(1)}L`, 'Revenue']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                <Line type="monotone" dataKey="revenue" stroke="#00B894" strokeWidth={2} dot={{ fill: '#00B894', r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Doctor Performance</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={topDoctors} layout="vertical" barSize={16}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#6B7280' }} axisLine={false} tickLine={false} width={120} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                <Bar dataKey="prescriptions" fill="#2563EB" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Prescription by Category</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={categoryData} cx="50%" cy="50%" outerRadius={80} dataKey="value" paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                  {categoryData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Verification Request Trend</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { label: 'Total Verification Requests', value: '284', sub: 'This month', color: '#FF6B6B' },
+              { label: 'Approved', value: '195', sub: '68.7% approval rate', color: '#22C55E' },
+              { label: 'Pending', value: '52', sub: 'Awaiting review', color: '#F59E0B' },
+            ].map((s, i) => (
+              <div key={i} className="p-5 rounded-xl" style={{ backgroundColor: s.color + '10' }}>
+                <p style={{ fontSize: '2rem', fontWeight: 800, color: s.color }}>{s.value}</p>
+                <p style={{ fontWeight: 600, fontSize: '0.875rem', color: '#374151', marginTop: '0.25rem' }}>{s.label}</p>
+                <p style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '0.25rem' }}>{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const NotificationsView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Notifications</h2>
+        <Button variant="outline" size="sm" className="text-xs" onClick={() => setNotifList(l => l.map(n => ({ ...n, read: true })))}>Mark all as read</Button>
+      </div>
+      <div className="space-y-3">
+        {notifList.map(notif => (
+          <div key={notif.id} className="p-4 rounded-xl border transition-all"
+            style={{ backgroundColor: notif.read ? 'white' : '#F8FAFC', borderColor: notif.read ? '#E5E7EB' : notif.color + '30' }}>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: notif.color + '15' }}>
+                <Bell className="w-4 h-4" style={{ color: notif.color }} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p style={{ fontWeight: notif.read ? 500 : 600, fontSize: '0.875rem', color: '#1A1A2E' }}>{notif.title}</p>
+                  {!notif.read && <div className="w-2 h-2 rounded-full shrink-0 mt-1" style={{ backgroundColor: notif.color }}></div>}
+                </div>
+                <p style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '0.25rem' }}>{notif.body}</p>
+                <p style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '0.25rem' }}>{notif.time}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const SettingsView = () => (
+    <div className="space-y-6">
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>System Settings</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[
+          { title: 'Verification Settings', items: ['Auto-assign reviews to senior admins', 'Email notifications for new registrations', 'Require 2-factor verification for licenses', 'Auto-expire unreviewed applications in 30 days'] },
+          { title: 'Notification Settings', items: ['Daily summary report via email', 'Low stock alerts to pharmacists', 'License expiry reminders (30 days before)', 'New patient registration alerts'] },
+          { title: 'Platform Settings', items: ['Maintenance mode', 'API rate limiting', 'Session timeout (30 minutes)', 'Two-factor authentication for admin'] },
+          { title: 'Data & Privacy', items: ['HIPAA compliance mode', 'Data encryption at rest', 'Audit log retention (5 years)', 'Patient data anonymization'] },
+        ].map((section, i) => (
+          <Card key={i} className="border-0 shadow-sm">
+            <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>{section.title}</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {section.items.map((item, j) => (
+                <div key={j} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: '#F8FAFC' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#374151' }}>{item}</span>
+                  <div className="w-10 h-5 rounded-full relative cursor-pointer" style={{ backgroundColor: j % 2 === 0 ? '#22C55E' : '#E5E7EB' }}>
+                    <div className="w-4 h-4 rounded-full bg-white absolute top-0.5 shadow-sm transition-all"
+                      style={{ left: j % 2 === 0 ? '22px' : '2px' }}></div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const views: Record<AdminView, React.ReactNode> = {
+    overview: <OverviewView />,
+    doctors: <DoctorsView />,
+    pharmacists: <PharmacistsView />,
+    pharmacies: <PharmaciesView />,
+    analytics: <AnalyticsView />,
+    notifications: <NotificationsView />,
+    settings: <SettingsView />,
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F8FAFC' }}>
+      <div className="hidden lg:block shrink-0"><Sidebar /></div>
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 flex">
+          <div className="fixed inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setSidebarOpen(false)}></div>
+          <div className="relative z-50"><Sidebar /></div>
+        </div>
+      )}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white border-b border-gray-100 px-4 lg:px-6 py-3 flex items-center gap-3">
+          <button className="lg:hidden p-2 rounded-xl hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
+            <Menu className="w-5 h-5 text-gray-600" />
+          </button>
+          <div className="flex-1">
+            <p style={{ fontWeight: 600, color: '#1A1A2E', fontSize: '0.95rem' }}>Admin Dashboard</p>
+          </div>
+          <button className="relative p-2 rounded-xl hover:bg-gray-100" onClick={() => setActiveView('notifications')}>
+            <Bell className="w-5 h-5 text-gray-600" />
+            {notifList.filter(n => !n.read).length > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: '#FF6B6B' }}></span>
+            )}
+          </button>
+        </header>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{views[activeView]}</main>
+      </div>
+    </div>
+  );
+}

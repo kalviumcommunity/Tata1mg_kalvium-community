@@ -8,10 +8,10 @@ export default function Auth() {
 
   return (
     <AuthPage
-      onLogin={() => {
-        // Pharmacist/Admin portals aren't part of this push yet —
-        // every successful login lands on the doctor dashboard for now.
-        router.push("/doctor");
+      onLogin={(role) => {
+        if (role === "doctor") router.push("/doctor");
+        else if (role === "pharmacist") router.push("/pharmacist");
+        else if (role === "admin") router.push("/admin");
       }}
       onBack={() => router.push("/")}
     />
