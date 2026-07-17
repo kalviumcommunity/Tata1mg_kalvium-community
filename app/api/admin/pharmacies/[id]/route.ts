@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { findPharmacy } from '@/lib/adminMockData';
+import { UpdatePharmacySchema } from '@/lib/validationSchemas';
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const pharmacy = findPharmacy(params.id);
@@ -19,9 +20,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const updates = await request.json();
-    Object.assign(pharmacy, updates);
+    const validatedUpdates = UpdatePharmacySchema.parse(updates);
+    Object.assign(pharmacy, validatedUpdates);
     return NextResponse.json({ data: pharmacy });
-  } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 }

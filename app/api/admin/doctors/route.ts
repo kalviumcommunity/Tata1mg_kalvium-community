@@ -1,26 +1,54 @@
-import { NextResponse } from 'next/server';
-import { doctors } from '@/lib/adminMockData';
+import { NextRequest, NextResponse } from 'next/server';
+import { doctors, Doctor } from '@/lib/adminMockData';
+import { CreateDoctorSchema, ListQuerySchema } from '@/lib/validationSchemas';
+import { filterAndPaginate } from '@/lib/filterUtils';
 
-export async function GET() {
-  return NextResponse.json({ data: doctors });
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const query = {
+      page: searchParams.get('page') || undefined,
+      limit: searchParams.get('limit') || undefined,
+      search: searchParams.get('search') || undefined,
+      status: searchParams.get('status') || undefined,
+      sortBy: searchParams.get('sortBy') || undefined,
+      sortOrder: searchParams.get('sortOrder') || undefined,
+    };
+
+    const parsedQuery = ListQuerySchema.parse(query);
+    const result = filterAndPaginate(doctors, parsedQuery);
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
+  }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const newDoctor = {
+    const validatedData = CreateDoctorSchema.parse(body);
+
+    const newDoctor: Doctor = {
       id: `D${Date.now()}`,
-      name: body.name ?? 'Unknown Doctor',
-      regNo: body.regNo ?? 'N/A',
-      hospital: body.hospital ?? 'Unknown Hospital',
-      specialization: body.specialization ?? 'General',
-      licenseFile: body.licenseFile ?? 'license_new.pdf',
+      name: validatedData.name,
+      email: validatedData.email,
+      specialization: validatedData.specialization,
+      licenseNumber: validatedData.licenseNumber,
+      phone: validatedData.phone,
+      licenseFile: 'license_pending.pdf',
+      createdAt: new Date().toISOString(),
       status: 'Pending' as const,
     };
 
     doctors.push(newDoctor);
     return NextResponse.json({ data: newDoctor }, { status: 201 });
-  } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 }
