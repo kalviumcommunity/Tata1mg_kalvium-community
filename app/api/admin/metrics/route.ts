@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
 import { metrics } from '@/lib/adminMockData';
+import { jsonSuccess } from '@/lib/apiResponse';
+
 export async function GET() {
-  return NextResponse.json({ data: metrics });
+  return jsonSuccess(metrics);
 }
