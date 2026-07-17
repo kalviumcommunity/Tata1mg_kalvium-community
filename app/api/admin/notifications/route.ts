@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const notifications = [
-  { id: 1, title: 'New Doctor Registration', body: 'Dr. Prateek Sharma submitted documents', time: '10 min ago', read: false },
-  { id: 2, title: 'License Expiry', body: 'Apollo Pharmacy license expires in 30 days', time: '1 hour ago', read: false },
-];
+import { notifications } from '@/lib/adminMockData';
 
 export async function GET() {
   return NextResponse.json({ data: notifications });
@@ -12,7 +8,21 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    return NextResponse.json({ ok: true, created: body }, { status: 201 });
+    if (body.action === 'markAllRead') {
+      notifications.forEach((item) => { item.read = true; });
+      return NextResponse.json({ ok: true, data: notifications });
+    }
+
+    const newNotification = {
+      id: Date.now(),
+      title: body.title ?? 'New Notification',
+      body: body.body ?? 'No details provided',
+      time: body.time ?? 'Just now',
+      read: false,
+    };
+
+    notifications.unshift(newNotification);
+    return NextResponse.json({ data: newNotification }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
   }

@@ -9,10 +9,21 @@ Available endpoints (app router):
 
 - `GET /api/admin/doctors` — list doctors
 - `POST /api/admin/doctors` — create doctor (mock)
+- `GET /api/admin/doctors/[id]` — get doctor details
+- `PATCH /api/admin/doctors/[id]` — update doctor status/details
 - `GET /api/admin/pharmacists` — list pharmacists
+- `POST /api/admin/pharmacists` — create pharmacist (mock)
+- `GET /api/admin/pharmacists/[id]` — get pharmacist details
+- `PATCH /api/admin/pharmacists/[id]` — update pharmacist status/details
 - `GET /api/admin/pharmacies` — list pharmacies
+- `POST /api/admin/pharmacies` — create pharmacy (mock)
+- `GET /api/admin/pharmacies/[id]` — get pharmacy details
+- `PATCH /api/admin/pharmacies/[id]` — update pharmacy status/details
 - `GET /api/admin/notifications` — list notifications
+- `POST /api/admin/notifications` — create notification or mark all read
 - `GET /api/admin/metrics` — dashboard metrics
+- `GET /api/auth/session` — mock current user session
+- `POST /api/auth/login` — mock login endpoint
 
 Next steps for backend developer assigned to this branch:
 
