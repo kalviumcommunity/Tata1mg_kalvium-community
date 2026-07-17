@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { pharmacists, Pharmacist } from '@/lib/adminMockData';
 import { CreatePharmacistSchema, ListQuerySchema } from '@/lib/validationSchemas';
 import { filterAndPaginate } from '@/lib/filterUtils';
+import { jsonError, jsonSuccess } from '@/lib/apiResponse';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,12 +18,12 @@ export async function GET(request: NextRequest) {
 
     const parsedQuery = ListQuerySchema.parse(query);
     const result = filterAndPaginate(pharmacists, parsedQuery);
-    return NextResponse.json(result);
+    return jsonSuccess(result);
   } catch (error) {
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return jsonError(error.message);
     }
-    return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
+    return jsonError('Invalid query parameters');
   }
 }
 
@@ -44,11 +45,11 @@ export async function POST(request: Request) {
     };
 
     pharmacists.push(newPharmacist);
-    return NextResponse.json({ data: newPharmacist }, { status: 201 });
+    return jsonSuccess(newPharmacist, 201);
   } catch (error) {
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return jsonError(error.message);
     }
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return jsonError('Invalid request body');
   }
 }
