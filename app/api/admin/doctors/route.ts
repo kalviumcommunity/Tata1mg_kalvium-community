@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const doctors = [
-  { id: 'D001', name: 'Dr. Prateek Sharma', specialization: 'Neurology', hospital: 'AIIMS Delhi', status: 'Pending' },
-  { id: 'D002', name: 'Dr. Kavita Menon', specialization: 'Dermatology', hospital: 'Amrita Hospital', status: 'Under Review' },
-  { id: 'D003', name: 'Dr. Sunil Verma', specialization: 'Orthopedics', hospital: 'Nanavati Hospital', status: 'Verified' },
-];
+import { doctors } from '@/lib/adminMockData';
 
 export async function GET() {
   return NextResponse.json({ data: doctors });
@@ -13,8 +8,18 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // In future: validate and persist using Prisma / Postgres
-    return NextResponse.json({ ok: true, created: body }, { status: 201 });
+    const newDoctor = {
+      id: `D${Date.now()}`,
+      name: body.name ?? 'Unknown Doctor',
+      regNo: body.regNo ?? 'N/A',
+      hospital: body.hospital ?? 'Unknown Hospital',
+      specialization: body.specialization ?? 'General',
+      licenseFile: body.licenseFile ?? 'license_new.pdf',
+      status: 'Pending' as const,
+    };
+
+    doctors.push(newDoctor);
+    return NextResponse.json({ data: newDoctor }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 400 });
   }
