@@ -66,3 +66,4 @@ npm run build
 ```
 
 Verified: builds cleanly, all 5 routes prerender as static content.
+This is fantastic.
