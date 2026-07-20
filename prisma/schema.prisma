@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+}
+
+model Doctor {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  specialization String?
+  licenseNumber String?
+  phone        String?
+  licenseFile  String?
+  status       String   @default("Pending")
+  createdAt    DateTime @default(now())
+}
+
+model Pharmacist {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  licenseNumber String?
+  phone        String?
+  qualifications String?
+  licenseFile  String?
+  status       String   @default("Pending")
+  createdAt    DateTime @default(now())
+}
+
+model Pharmacy {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?  @unique
+  phone     String?
+  address   String?
+  status    String   @default("Pending")
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Metric {
+  id     String @id @default(uuid())
+  key    String
+  value  Int
+  createdAt DateTime @default(now())
+}
