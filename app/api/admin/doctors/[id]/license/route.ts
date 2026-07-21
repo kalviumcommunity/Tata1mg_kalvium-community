@@ -34,8 +34,8 @@ export async function POST(
     const fileName = `doctor_${params.id}_${Date.now()}${ext}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'licenses', 'doctors');
     await fs.mkdir(uploadDir, { recursive: true });
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(path.join(uploadDir, fileName), buffer);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    await fs.writeFile(path.join(uploadDir, fileName), bytes);
 
     const fileUrl = `/uploads/licenses/doctors/${fileName}`;
 

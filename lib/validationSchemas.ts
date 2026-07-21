@@ -29,7 +29,6 @@ export const CreateDoctorSchema = z.object({
   phone: z.string().min(10, 'Phone must be at least 10 digits'),
 });
 
-/** Status uses human-readable labels at the API boundary; route maps → Prisma enum */
 export const UpdateDoctorSchema = z.object({
   status: z.enum(['PENDING', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED']).optional(),
   name: z.string().min(2).max(100).optional(),
@@ -96,11 +95,9 @@ export const RegisterSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   role: z.enum(['DOCTOR', 'PHARMACIST']),
-  // Doctor-specific
   specialization: z.string().optional(),
   licenseNumber: z.string().optional(),
   phone: z.string().min(10, 'Phone must be at least 10 digits').optional(),
-  // Pharmacist-specific
   qualifications: z.string().optional(),
 });
 

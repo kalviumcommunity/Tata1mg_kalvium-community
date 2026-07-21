@@ -11,9 +11,11 @@ This is **Phase 1: UX/UI**, ported pixel-for-pixel from the Figma
 - **Recharts** for the analytics dashboards
 - Deployment target: **Vercel**
 
+
 > Auth (Auth.js/JWT), Prisma + Neon PostgreSQL, and Zod validation are
 > scaffolded (see `.env.example`, `package.json`) but not yet wired up —
-> that's Phase 2.
+> that's  Phase 2.
+
 
 ## Routes
 
