@@ -2,16 +2,14 @@
 
 import React, { useState } from 'react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import {
   LayoutDashboard, Stethoscope, Pill, Building2, Bell,
   Settings, LogOut, Menu, X, Heart, Users, FileText,
   TrendingUp, Shield, CheckCircle, XCircle, Clock,
-  Eye, Download, Search, Filter, AlertCircle, User,
-  Activity, DollarSign, BarChart2, Star, Upload, Check,
-  ChevronRight, ShoppingCart
+  Eye, Download, Search, Activity, DollarSign, Check,
+  ShoppingCart, ChevronRight
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -55,62 +53,207 @@ const categoryData = [
   { name: 'Others', value: 7, color: '#EC4899' },
 ];
 
-const doctors = [
-  { id: 'D001', name: 'Dr. Prateek Sharma', regNo: 'MCI-2020-DL-45678', hospital: 'AIIMS Delhi', specialization: 'Neurology', licenseFile: 'license_prateek.pdf', status: 'Pending' },
-  { id: 'D002', name: 'Dr. Kavita Menon', regNo: 'MCI-2019-KL-12345', hospital: 'Amrita Hospital', specialization: 'Dermatology', licenseFile: 'license_kavita.pdf', status: 'Under Review' },
-  { id: 'D003', name: 'Dr. Sunil Verma', regNo: 'MCI-2018-MH-67890', hospital: 'Nanavati Hospital', specialization: 'Orthopedics', licenseFile: 'license_sunil.pdf', status: 'Verified' },
-  { id: 'D004', name: 'Dr. Ananya Bose', regNo: 'MCI-2021-WB-23456', hospital: 'SSKM Hospital', specialization: 'Pediatrics', licenseFile: 'license_ananya.pdf', status: 'Pending' },
-  { id: 'D005', name: 'Dr. Rohit Nair', regNo: 'MCI-2017-KA-78901', hospital: 'Manipal Hospital', specialization: 'General Medicine', licenseFile: 'license_rohit.pdf', status: 'Rejected' },
-];
+type DoctorProfile = {
+  id: string;
+  name: string;
+  regNo: string;
+  hospital: string;
+  specialization: string;
+  licenseFile?: string;
+  status: string;
+};
 
-const pharmacists = [
-  { id: 'PH001', name: 'Rahul Mehta', pharmacyLicense: 'PCI-GJ-2019-34567', regNo: 'PCI-GJ-56789', experience: '6 years', status: 'Pending' },
-  { id: 'PH002', name: 'Sunita Nair', pharmacyLicense: 'PCI-KL-2018-45678', regNo: 'PCI-KL-67890', experience: '9 years', status: 'Under Review' },
-  { id: 'PH003', name: 'Ajay Patel', pharmacyLicense: 'PCI-MH-2020-56789', regNo: 'PCI-MH-78901', experience: '4 years', status: 'Verified' },
-  { id: 'PH004', name: 'Deepa Krishnan', pharmacyLicense: 'PCI-TN-2021-67890', regNo: 'PCI-TN-89012', experience: '2 years', status: 'Pending' },
-  { id: 'PH005', name: 'Manish Gupta', pharmacyLicense: 'PCI-UP-2016-78901', regNo: 'PCI-UP-90123', experience: '12 years', status: 'Verified' },
-];
+type PharmacistProfile = {
+  id: string;
+  name: string;
+  pharmacyLicense?: string;
+  regNo: string;
+  experience?: string;
+  status: string;
+};
 
-const pharmacies = [
-  { id: 'PH001', name: 'Apollo Pharmacy', drugLicense: 'DL-KA-2019-12345', gst: '29AAACX1234A1Z5', address: 'MG Road, Bangalore', owner: 'Suresh Reddy', status: 'Pending' },
-  { id: 'PH002', name: 'MedPlus Stores', drugLicense: 'DL-KA-2018-23456', gst: '29AABCX2345A1Z6', address: 'Koramangala, Bangalore', owner: 'Venkat Rao', status: 'Verified' },
-  { id: 'PH003', name: 'LifeCare Pharmacy', drugLicense: 'DL-MH-2020-34567', gst: '27AACCX3456A1Z7', address: 'Andheri, Mumbai', owner: 'Rajesh Shah', status: 'Under Review' },
-  { id: 'PH004', name: 'Health First', drugLicense: 'DL-DL-2021-45678', gst: '07AAADX4567A1Z8', address: 'Connaught Place, Delhi', owner: 'Amit Kumar', status: 'Pending' },
-];
+type PharmacyProfile = {
+  id: string;
+  name: string;
+  drugLicense?: string;
+  gst?: string;
+  address?: string;
+  owner?: string;
+  status: string;
+};
 
-const adminNotifications = [
-  { id: 1, title: 'New Doctor Registration', body: 'Dr. Prateek Sharma (Neurology) submitted verification documents', time: '10 min ago', read: false, color: '#2563EB' },
-  { id: 2, title: 'License Expiry Alert', body: 'Apollo Pharmacy drug license expires in 30 days', time: '1 hour ago', read: false, color: '#F59E0B' },
-  { id: 3, title: 'New Pharmacy Registration', body: 'HealthCare Plus pharmacy applied for verification', time: '2 hours ago', read: false, color: '#00B894' },
-  { id: 4, title: 'Verification Request', body: 'Sunita Nair (Pharmacist) documents ready for review', time: '3 hours ago', read: true, color: '#8B5CF6' },
-  { id: 5, title: 'System Alert', body: 'Daily prescription count exceeded 400 — new record!', time: '5 hours ago', read: true, color: '#22C55E' },
-];
+type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  time: string;
+  read: boolean;
+  color: string;
+};
+
+const doctors: DoctorProfile[] = [];
+const pharmacists: PharmacistProfile[] = [];
+const pharmacies: PharmacyProfile[] = [];
+const adminNotifications: NotificationItem[] = [];
 
 const statusColor = (status: string) => {
   const map: Record<string, { bg: string; text: string }> = {
-    Pending: { bg: '#FFFBEB', text: '#F59E0B' },
+    // Prisma enum values
+    PENDING:      { bg: '#FFFBEB', text: '#F59E0B' },
+    UNDER_REVIEW: { bg: '#EFF6FF', text: '#2563EB' },
+    VERIFIED:     { bg: '#F0FDF4', text: '#22C55E' },
+    REJECTED:     { bg: '#FFF5F5', text: '#FF6B6B' },
+    // Legacy display labels (fallback)
+    Pending:        { bg: '#FFFBEB', text: '#F59E0B' },
     'Under Review': { bg: '#EFF6FF', text: '#2563EB' },
-    Verified: { bg: '#F0FDF4', text: '#22C55E' },
-    Rejected: { bg: '#FFF5F5', text: '#FF6B6B' },
+    Verified:       { bg: '#F0FDF4', text: '#22C55E' },
+    Rejected:       { bg: '#FFF5F5', text: '#FF6B6B' },
   };
   return map[status] || { bg: '#F9FAFB', text: '#6B7280' };
 };
 
 const statusIcon = (status: string) => {
-  if (status === 'Verified') return <CheckCircle className="w-3.5 h-3.5" />;
-  if (status === 'Rejected') return <XCircle className="w-3.5 h-3.5" />;
-  if (status === 'Under Review') return <Eye className="w-3.5 h-3.5" />;
+  if (status === 'VERIFIED' || status === 'Verified') return <CheckCircle className="w-3.5 h-3.5" />;
+  if (status === 'REJECTED' || status === 'Rejected') return <XCircle className="w-3.5 h-3.5" />;
+  if (status === 'UNDER_REVIEW' || status === 'Under Review') return <Eye className="w-3.5 h-3.5" />;
   return <Clock className="w-3.5 h-3.5" />;
 };
+
+/** Human-readable label for Prisma enum status */
+const statusLabel = (status: string) => {
+  const labels: Record<string, string> = {
+    PENDING: 'Pending', UNDER_REVIEW: 'Under Review',
+    VERIFIED: 'Verified', REJECTED: 'Rejected',
+  };
+  return labels[status] || status;
+};
+
+type MetricCounts = { doctors: number; pharmacists: number; pharmacies: number; patients: number; prescriptions: number; orders: number };
+type DailyPoint = { date: string; count: number };
+type TopDoctorPoint = { name: string; prescriptions: number };
 
 export function AdminPortal({ onBack }: AdminPortalProps) {
   const [activeView, setActiveView] = useState<AdminView>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [doctorList, setDoctorList] = useState(doctors);
-  const [pharmList, setPharmList] = useState(pharmacists);
-  const [pharmacyList, setPharmacyList] = useState(pharmacies);
-  const [notifList, setNotifList] = useState(adminNotifications);
+  const [doctorList, setDoctorList] = useState<DoctorProfile[]>(doctors);
+  const [pharmList, setPharmList] = useState<PharmacistProfile[]>(pharmacists);
+  const [pharmacyList, setPharmacyList] = useState<PharmacyProfile[]>(pharmacies);
+  const [notifList, setNotifList] = useState<NotificationItem[]>(adminNotifications);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [metrics, setMetrics] = useState<MetricCounts | null>(null);
+  const [liveDaily, setLiveDaily] = useState<DailyPoint[]>(dailyPrescriptions);
+  const [liveTopDoctors, setLiveTopDoctors] = useState<TopDoctorPoint[]>(topDoctors);
+
+  // Fetch real DB data
+  const refreshData = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const [docsRes, pharmsRes, phrmciesRes, notifsRes, metricsRes] = await Promise.all([
+        fetch('/api/admin/doctors').then((r) => r.json()),
+        fetch('/api/admin/pharmacists').then((r) => r.json()),
+        fetch('/api/admin/pharmacies').then((r) => r.json()),
+        fetch('/api/admin/notifications').then((r) => r.json()),
+        fetch('/api/admin/metrics').then((r) => r.json()),
+      ]);
+
+      if (docsRes.data?.data) setDoctorList(docsRes.data.data);
+      if (pharmsRes.data?.data) setPharmList(pharmsRes.data.data);
+      if (phrmciesRes.data?.data) setPharmacyList(phrmciesRes.data.data);
+      if (notifsRes.data?.data) setNotifList(notifsRes.data.data);
+      if (metricsRes.data) {
+        setMetrics(metricsRes.data.counts);
+        if (Array.isArray(metricsRes.data.dailyPrescriptions)) setLiveDaily(metricsRes.data.dailyPrescriptions);
+        if (Array.isArray(metricsRes.data.topDoctors)) setLiveTopDoctors(metricsRes.data.topDoctors);
+      }
+    } catch (e) {
+      console.error('Failed to fetch admin data', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const handleVerifyDoctor = async (id: string) => {
+    try {
+      await fetch(`/api/admin/doctors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'VERIFIED' }),
+      });
+      refreshData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectDoctor = async (id: string) => {
+    try {
+      await fetch(`/api/admin/doctors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED' }),
+      });
+      refreshData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleVerifyPharmacist = async (id: string) => {
+    try {
+      await fetch(`/api/admin/pharmacists/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'VERIFIED' }),
+      });
+      refreshData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectPharmacist = async (id: string) => {
+    try {
+      await fetch(`/api/admin/pharmacists/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED' }),
+      });
+      refreshData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleVerifyPharmacy = async (id: string) => {
+    try {
+      await fetch(`/api/admin/pharmacies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'VERIFIED' }),
+      });
+      refreshData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectPharmacy = async (id: string) => {
+    try {
+      await fetch(`/api/admin/pharmacies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED' }),
+      });
+      refreshData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const navItems = [
     { id: 'overview' as AdminView, label: 'Overview', icon: LayoutDashboard },
@@ -185,14 +328,14 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Doctors', value: '1,248', icon: Stethoscope, color: '#2563EB', bg: '#EFF6FF', change: '+12 this month' },
-          { label: 'Total Pharmacists', value: '856', icon: Pill, color: '#00B894', bg: '#F0FDF4', change: '+8 this month' },
-          { label: 'Total Pharmacies', value: '432', icon: Building2, color: '#8B5CF6', bg: '#F5F3FF', change: '+5 this month' },
-          { label: 'Total Patients', value: '52,840', icon: Users, color: '#F59E0B', bg: '#FFFBEB', change: '+340 this week' },
-          { label: 'Total Prescriptions', value: '3.2M', icon: FileText, color: '#FF6B6B', bg: '#FFF5F5', change: '+428 today' },
-          { label: 'Total Orders', value: '1.8M', icon: ShoppingCart, color: '#22C55E', bg: '#F0FDF4', change: '+156 today' },
-          { label: 'Monthly Revenue', value: '₹21.5L', icon: DollarSign, color: '#EC4899', bg: '#FDF2F8', change: '+18% vs last month' },
-          { label: 'Active Users', value: '12,450', icon: Activity, color: '#06B6D4', bg: '#F0FDFF', change: '+8% this week' },
+          { label: 'Total Doctors', value: metrics ? metrics.doctors.toLocaleString() : '—', icon: Stethoscope, color: '#2563EB', bg: '#EFF6FF', change: 'Registered doctors' },
+          { label: 'Total Pharmacists', value: metrics ? metrics.pharmacists.toLocaleString() : '—', icon: Pill, color: '#00B894', bg: '#F0FDF4', change: 'Registered pharmacists' },
+          { label: 'Total Pharmacies', value: metrics ? metrics.pharmacies.toLocaleString() : '—', icon: Building2, color: '#8B5CF6', bg: '#F5F3FF', change: 'Registered pharmacies' },
+          { label: 'Total Patients', value: metrics ? metrics.patients.toLocaleString() : '—', icon: Users, color: '#F59E0B', bg: '#FFFBEB', change: 'Registered patients' },
+          { label: 'Total Prescriptions', value: metrics ? metrics.prescriptions.toLocaleString() : '—', icon: FileText, color: '#FF6B6B', bg: '#FFF5F5', change: 'All-time prescriptions' },
+          { label: 'Total Orders', value: metrics ? metrics.orders.toLocaleString() : '—', icon: ShoppingCart, color: '#22C55E', bg: '#F0FDF4', change: 'All-time orders' },
+          { label: 'Pending Doctors', value: doctorList.filter(d => d.status === 'PENDING' || d.status === 'Pending').length.toLocaleString(), icon: DollarSign, color: '#EC4899', bg: '#FDF2F8', change: 'Awaiting verification' },
+          { label: 'Pending Pharmacies', value: pharmacyList.filter(p => p.status === 'PENDING' || p.status === 'Pending').length.toLocaleString(), icon: Activity, color: '#06B6D4', bg: '#F0FDFF', change: 'Awaiting verification' },
         ].map((stat, i) => (
           <Card key={i} className="border-0 shadow-sm">
             <CardContent className="p-5">
@@ -215,7 +358,7 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
           <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Daily Prescriptions (Last 7 Days)</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={dailyPrescriptions}>
+              <AreaChart data={liveDaily}>
                 <defs>
                   <linearGradient id="adminGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop key="stop-1" offset="5%" stopColor="#FF6B6B" stopOpacity={0.2} />
@@ -276,7 +419,7 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Top Performing Doctors</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {topDoctors.map((doc, i) => (
+            {liveTopDoctors.map((doc, i) => (
               <div key={i} className="flex items-center gap-3">
                 <span style={{ fontSize: '0.8rem', color: '#9CA3AF', minWidth: '16px' }}>{i + 1}</span>
                 <div className="flex-1">
@@ -294,12 +437,10 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
         </Card>
       </div>
     </div>
-  );
-
-  const VerificationTable = ({
+  );  const VerificationTable = ({
     data, onVerify, onReject, columns
   }: {
-    data: Array<Record<string, string>>,
+    data: Array<Record<string, unknown>>,
     onVerify: (id: string) => void,
     onReject: (id: string) => void,
     columns: Array<{ key: string; label: string }>,
@@ -319,31 +460,31 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
             </thead>
             <tbody>
               {data.map((row, i) => (
-                <tr key={row.id} style={{ borderBottom: i < data.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                <tr key={String(row.id)} style={{ borderBottom: i < data.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                   {columns.map(col => (
                     <td key={col.key} className="px-4 py-3" style={{ fontSize: '0.8rem', color: col.key === 'name' ? '#1A1A2E' : '#6B7280', fontWeight: col.key === 'name' ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {col.key === 'licenseFile' ? (
                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1">
                           <Download className="w-3 h-3" /> View
                         </Button>
-                      ) : row[col.key]}
+                      ) : String(row[col.key] || '')}
                     </td>
                   ))}
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full"
-                      style={{ backgroundColor: statusColor(row.status).bg, color: statusColor(row.status).text }}>
-                      {statusIcon(row.status)} {row.status}
+                      style={{ backgroundColor: statusColor(String(row.status || '')).bg, color: statusColor(String(row.status || '')).text }}>
+                      {statusIcon(String(row.status || ''))} {statusLabel(String(row.status || ''))}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      {row.status !== 'Verified' && (
-                        <Button size="sm" onClick={() => onVerify(row.id)} style={{ backgroundColor: '#22C55E', height: '28px', fontSize: '0.75rem', gap: '4px' }} className="text-white px-2">
+                      {row.status !== 'VERIFIED' && row.status !== 'Verified' && (
+                        <Button size="sm" onClick={() => onVerify(String(row.id))} style={{ backgroundColor: '#22C55E', height: '28px', fontSize: '0.75rem', gap: '4px' }} className="text-white px-2">
                           <Check className="w-3 h-3" /> Verify
                         </Button>
                       )}
-                      {row.status !== 'Rejected' && (
-                        <Button size="sm" variant="outline" onClick={() => onReject(row.id)} className="border-red-200 text-red-500 hover:bg-red-50 h-7 px-2 text-xs gap-1">
+                      {row.status !== 'REJECTED' && row.status !== 'Rejected' && (
+                        <Button size="sm" variant="outline" onClick={() => onReject(String(row.id))} className="border-red-200 text-red-500 hover:bg-red-50 h-7 px-2 text-xs gap-1">
                           <XCircle className="w-3 h-3" /> Reject
                         </Button>
                       )}
@@ -400,8 +541,8 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
 
         <VerificationTable
           data={filtered}
-          onVerify={id => setDoctorList(l => l.map(d => d.id === id ? { ...d, status: 'Verified' } : d))}
-          onReject={id => setDoctorList(l => l.map(d => d.id === id ? { ...d, status: 'Rejected' } : d))}
+          onVerify={handleVerifyDoctor}
+          onReject={handleRejectDoctor}
           columns={[
             { key: 'name', label: 'Doctor Name' },
             { key: 'regNo', label: 'Registration No.' },
@@ -428,8 +569,8 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
       </div>
       <VerificationTable
         data={pharmList}
-        onVerify={id => setPharmList(l => l.map(p => p.id === id ? { ...p, status: 'Verified' } : p))}
-        onReject={id => setPharmList(l => l.map(p => p.id === id ? { ...p, status: 'Rejected' } : p))}
+        onVerify={handleVerifyPharmacist}
+        onReject={handleRejectPharmacist}
         columns={[
           { key: 'name', label: 'Pharmacist Name' },
           { key: 'pharmacyLicense', label: 'Pharmacy License' },
@@ -453,8 +594,8 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
       </div>
       <VerificationTable
         data={pharmacyList}
-        onVerify={id => setPharmacyList(l => l.map(p => p.id === id ? { ...p, status: 'Verified' } : p))}
-        onReject={id => setPharmacyList(l => l.map(p => p.id === id ? { ...p, status: 'Rejected' } : p))}
+        onVerify={handleVerifyPharmacy}
+        onReject={handleRejectPharmacy}
         columns={[
           { key: 'name', label: 'Pharmacy Name' },
           { key: 'drugLicense', label: 'Drug License' },
@@ -475,7 +616,7 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
           <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Daily Prescriptions Trend</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={dailyPrescriptions}>
+              <AreaChart data={liveDaily}>
                 <defs>
                   <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
                     <stop key="stop-1" offset="5%" stopColor="#FF6B6B" stopOpacity={0.2} />
@@ -511,7 +652,7 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
           <CardHeader className="pb-2"><CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Doctor Performance</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={topDoctors} layout="vertical" barSize={16}>
+              <BarChart data={liveTopDoctors} layout="vertical" barSize={16}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#6B7280' }} axisLine={false} tickLine={false} width={120} />
@@ -527,7 +668,7 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={categoryData} cx="50%" cy="50%" outerRadius={80} dataKey="value" paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                <Pie data={categoryData} cx="50%" cy="50%" outerRadius={80} dataKey="value" paddingAngle={3} label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                   {categoryData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                 </Pie>
                 <Tooltip />
@@ -542,9 +683,9 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { label: 'Total Verification Requests', value: '284', sub: 'This month', color: '#FF6B6B' },
-              { label: 'Approved', value: '195', sub: '68.7% approval rate', color: '#22C55E' },
-              { label: 'Pending', value: '52', sub: 'Awaiting review', color: '#F59E0B' },
+              { label: 'Total Verification Requests', value: (doctorList.length + pharmList.length + pharmacyList.length).toString(), sub: 'All-time registrations', color: '#FF6B6B' },
+              { label: 'Approved', value: [...doctorList, ...pharmList, ...pharmacyList].filter(x => x.status === 'VERIFIED' || x.status === 'Verified').length.toString(), sub: 'Total verified accounts', color: '#22C55E' },
+              { label: 'Pending', value: [...doctorList, ...pharmList, ...pharmacyList].filter(x => x.status === 'PENDING' || x.status === 'Pending').length.toString(), sub: 'Awaiting review', color: '#F59E0B' },
             ].map((s, i) => (
               <div key={i} className="p-5 rounded-xl" style={{ backgroundColor: s.color + '10' }}>
                 <p style={{ fontSize: '2rem', fontWeight: 800, color: s.color }}>{s.value}</p>
@@ -650,7 +791,7 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
             )}
           </button>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{views[activeView]}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6" style={{ opacity: loading ? 0.5 : 1 }}>{views[activeView]}</main>
       </div>
     </div>
   );
