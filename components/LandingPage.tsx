@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
 import {
-  Upload, UserCheck, Building2, Pill, Truck, FileText, Heart,
+  UserCheck, Building2, Pill, Truck, FileText, Heart,
   Package, Shield, CheckCircle, Clock, Stethoscope, Users,
-  ChevronRight, Facebook, Twitter, Instagram, Linkedin, Menu, X,
-  Star, Activity, TrendingUp, Bell
+  Facebook, Twitter, Instagram, Linkedin, Menu, X,
+  Star, Activity, Bell
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -151,7 +150,7 @@ export function LandingPage({ onRoleSelect }: LandingPageProps) {
                   { icon: Shield, label: 'Admin Access', bg: 'transparent', textColor: 'white', role: 'admin' },
                 ].map((btn, i) => (
                   <Button key={i} size="lg"
-                    onClick={() => onRoleSelect(btn.role as any)}
+                    onClick={() => onRoleSelect(btn.role as 'doctor' | 'pharmacist' | 'admin')}
                     style={{ backgroundColor: btn.bg, color: btn.textColor, border: btn.bg === 'transparent' ? '1px solid rgba(255,255,255,0.5)' : 'none' }}
                     className="hover:opacity-90 transition-opacity">
                     <btn.icon className="w-4 h-4 mr-2" />
@@ -257,7 +256,7 @@ export function LandingPage({ onRoleSelect }: LandingPageProps) {
               Our Services
             </span>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#1A1A2E', marginBottom: '0.75rem' }}>Everything You Need for Healthcare</h2>
-            <p style={{ color: '#6B7280', maxWidth: '36rem', margin: '0 auto' }}>From prescription management to medicine delivery, we've got your healthcare needs covered end-to-end.</p>
+            <p style={{ color: '#6B7280', maxWidth: '36rem', margin: '0 auto' }}>From prescription management to medicine delivery, we&apos;ve got your healthcare needs covered end-to-end.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, i) => (

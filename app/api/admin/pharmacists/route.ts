@@ -1,0 +1,92 @@
+import { NextRequest } from 'next/server';
+import { ApprovalStatus, Prisma } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/auth';
+import { CreatePharmacistSchema, ListQuerySchema } from '@/lib/validationSchemas';
+import { jsonError, jsonSuccess } from '@/lib/apiResponse';
+import bcrypt from 'bcryptjs';
+
+export async function GET(request: NextRequest) {
+  const auth = requireRole(request, 'ADMIN');
+  if (auth.error) return jsonError(auth.error, auth.error === 'Unauthorized' ? 401 : 403);
+
+  try {
+    const sp = request.nextUrl.searchParams;
+    const parsed = ListQuerySchema.safeParse({
+      page: sp.get('page') || undefined,
+      limit: sp.get('limit') || undefined,
+      search: sp.get('search') || undefined,
+      status: sp.get('status') || undefined,
+      sortBy: sp.get('sortBy') || undefined,
+      sortOrder: sp.get('sortOrder') || undefined,
+    });
+    if (!parsed.success) return jsonError(parsed.error.errors[0].message);
+
+    const { page = 1, limit = 10, search, status, sortBy = 'date', sortOrder = 'desc' } = parsed.data;
+
+    const where: Prisma.PharmacistProfileWhereInput = {};
+    if (status) where.status = status as ApprovalStatus;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { licenseNumber: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const orderBy: Prisma.PharmacistProfileOrderByWithRelationInput =
+      sortBy === 'name' ? { name: sortOrder } :
+      sortBy === 'status' ? { status: sortOrder } :
+      { createdAt: sortOrder };
+
+    const [data, total] = await Promise.all([
+      prisma.pharmacistProfile.findMany({ where, orderBy, skip: (page - 1) * limit, take: limit }),
+      prisma.pharmacistProfile.count({ where }),
+    ]);
+
+    return jsonSuccess({
+      data,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error('[GET /api/admin/pharmacists]', err);
+    return jsonError('Internal server error', 500);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const auth = requireRole(request, 'ADMIN');
+  if (auth.error) return jsonError(auth.error, auth.error === 'Unauthorized' ? 401 : 403);
+
+  try {
+    const body = await request.json();
+    const parsed = CreatePharmacistSchema.safeParse(body);
+    if (!parsed.success) return jsonError(parsed.error.errors[0].message);
+
+    const { name, email, licenseNumber, phone, qualifications } = parsed.data;
+
+    const existing = await prisma.pharmacistProfile.findUnique({ where: { email } });
+    if (existing) return jsonError('A pharmacist with this email already exists', 409);
+
+    const passwordHash = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        role: 'PHARMACIST',
+        pharmacistProfile: { create: { name, email, licenseNumber, phone, qualifications, status: 'PENDING' } },
+      },
+      include: { pharmacistProfile: true },
+    });
+
+    await prisma.auditLog.create({
+      data: { userId: auth.user.userId, action: 'CREATE_PHARMACIST', details: `Created pharmacist profile for ${email}` },
+    });
+
+    return jsonSuccess(user.pharmacistProfile, 201);
+  } catch (err) {
+    console.error('[POST /api/admin/pharmacists]', err);
+    return jsonError('Internal server error', 500);
+  }
+}

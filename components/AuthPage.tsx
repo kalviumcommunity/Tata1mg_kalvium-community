@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
-  Eye, EyeOff, Heart, Stethoscope, Pill, Building2, Users,
+  Eye, EyeOff, Heart, Stethoscope, Pill,
   CheckCircle, AlertCircle, ArrowLeft, Shield, Lock, Mail,
-  User, FileText, ChevronRight
+  User, ChevronRight
 } from 'lucide-react';
 
 type Role = 'doctor' | 'pharmacist' | 'admin';
@@ -73,28 +73,64 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const switchTab = (t: AuthTab) => {
     setTab(t);
     setErrors({});
     setSubmitted(false);
     setForgotSent(false);
+    setApiError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+    setApiError('');
     const errs = validate(tab, { name, email, password, confirmPassword, role, terms });
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      if (tab === 'signup' && role) {
-        onLogin(role);
-      } else if (tab === 'login') {
-        let loginRole: Role = 'doctor'; // Default to doctor portal to prevent kicking out to landing page
-        if (email.includes('pharm')) loginRole = 'pharmacist';
-        if (email.includes('admin')) loginRole = 'admin';
-        onLogin(loginRole);
+    if (Object.keys(errs).length > 0) return;
+
+    setLoading(true);
+    try {
+      if (tab === 'login') {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          setApiError(data.error || 'Invalid email or password.');
+          return;
+        }
+        const serverRole = (data.user?.role as string || '').toLowerCase() as Role;
+        onLogin(serverRole);
+      } else {
+        if (!role) return;
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role: role.toUpperCase(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          setApiError(data.error || 'Registration failed. Please try again.');
+          return;
+        }
+        const serverRole = (data.user?.role as string || '').toLowerCase() as Role;
+        onLogin(serverRole);
       }
+    } catch {
+      setApiError('Network error. Please check your connection.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -394,11 +430,19 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
               </div>
             )}
 
+            {/* API Error */}
+            {apiError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: '#FFF5F5', border: '1px solid #FCA5A5' }}>
+                <AlertCircle className="w-4 h-4 shrink-0" style={{ color: '#EF4444' }} />
+                <p style={{ fontSize: '0.8rem', color: '#EF4444' }}>{apiError}</p>
+              </div>
+            )}
+
             {/* Submit */}
-            <Button type="submit" className="w-full h-11 text-white mt-2"
-              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700 }}>
-              {tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
-              <ChevronRight className="w-4 h-4 ml-1" />
+            <Button type="submit" className="w-full h-11 text-white mt-2" disabled={loading}
+              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700, opacity: loading ? 0.7 : 1 }}>
+              {loading ? 'Please wait…' : tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
+              {!loading && <ChevronRight className="w-4 h-4 ml-1" />}
             </Button>
 
             {/* Divider */}
