@@ -92,7 +92,7 @@ jobs:
   preview:
     name: Deploy preview (pull requests)
     needs: lint-and-build
-    if: github.event_name == 'pull_request' && secrets.VERCEL_TOKEN != ''
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
