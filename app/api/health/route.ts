@@ -1,19 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    service: 'prescriptrack-backend',
-    mode: 'mock',
-    database: 'PostgreSQL integration pending',
-    availableRoutes: [
-      '/api/admin/doctors',
-      '/api/admin/pharmacists',
-      '/api/admin/pharmacies',
-      '/api/admin/notifications',
-      '/api/admin/metrics',
-      '/api/auth/login',
-      '/api/auth/session',
-    ],
-  });
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return NextResponse.json({
+      status: 'healthy',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Health check failed]', error);
+    return NextResponse.json(
+      { status: 'unhealthy', database: 'disconnected', error: String(error) },
+      { status: 500 },
+    );
+  }
 }

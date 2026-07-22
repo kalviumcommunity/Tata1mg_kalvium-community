@@ -8,9 +8,8 @@ import { Input } from './ui/input';
 import {
   LayoutDashboard, Clock, CheckCircle, Package, ShoppingCart,
   Users, Bell, User, BarChart2, LogOut, Menu, X, Heart,
-  Search, TrendingUp, AlertCircle, Truck, FileText, Filter,
-  Download, Eye, Check, XCircle, DollarSign, Phone, Mail,
-  Plus, RefreshCw, ChevronRight, Activity
+  Search, TrendingUp, AlertCircle, Truck, FileText,
+  Eye, Check, XCircle, DollarSign, Plus, RefreshCw
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -23,71 +22,23 @@ interface PharmacistPortalProps {
   onBack: () => void;
 }
 
-const weeklyOrders = [
-  { day: 'Mon', orders: 24, revenue: 4200 },
-  { day: 'Tue', orders: 35, revenue: 6100 },
-  { day: 'Wed', orders: 28, revenue: 4900 },
-  { day: 'Thu', orders: 42, revenue: 7300 },
-  { day: 'Fri', orders: 31, revenue: 5400 },
-  { day: 'Sat', orders: 19, revenue: 3200 },
-  { day: 'Sun', orders: 15, revenue: 2600 },
-];
+type WeeklyOrders = { day: string; orders: number; revenue: number };
+type MonthlyRevenue = { month: string; revenue: number };
+type CategoryData = { name: string; value: number; color: string };
+type InventoryItem = { id: string; name: string; category: string; stock: number; minStock: number; price: string; expiry?: string; status: string };
+type IncomingPrescription = { id: string; patient: string; doctor: string; receivedAt: string; medicines: string[]; total: string; status: string };
+type OrderItem = { id: string; patient: string; rx: string; date: string; total: string; status: string; address: string };
+type CustomerItem = { id: string; name: string; phone: string; orders: number; lastOrder: string; totalSpend: string };
+type NotificationItem = { id: string; title: string; body: string; time: string; read: boolean; color: string };
 
-const monthlyRevenue = [
-  { month: 'Aug', revenue: 145000 }, { month: 'Sep', revenue: 162000 },
-  { month: 'Oct', revenue: 158000 }, { month: 'Nov', revenue: 178000 },
-  { month: 'Dec', revenue: 192000 }, { month: 'Jan', revenue: 215000 },
-];
-
-const categoryData = [
-  { name: 'Cardiac', value: 28, color: '#FF6B6B' },
-  { name: 'Diabetes', value: 22, color: '#2563EB' },
-  { name: 'Antibiotics', value: 18, color: '#00B894' },
-  { name: 'Pain Relief', value: 15, color: '#F59E0B' },
-  { name: 'Others', value: 17, color: '#8B5CF6' },
-];
-
-const inventory = [
-  { id: 'M001', name: 'Metformin 500mg', category: 'Diabetes', stock: 245, minStock: 50, price: '₹45', expiry: '2025-06', status: 'In Stock' },
-  { id: 'M002', name: 'Atorvastatin 20mg', category: 'Cardiac', stock: 32, minStock: 50, price: '₹85', expiry: '2024-12', status: 'Low Stock' },
-  { id: 'M003', name: 'Amoxicillin 500mg', category: 'Antibiotics', stock: 180, minStock: 30, price: '₹65', expiry: '2025-03', status: 'In Stock' },
-  { id: 'M004', name: 'Paracetamol 650mg', category: 'Pain Relief', stock: 520, minStock: 100, price: '₹12', expiry: '2026-01', status: 'In Stock' },
-  { id: 'M005', name: 'Amlodipine 5mg', category: 'Cardiac', stock: 0, minStock: 30, price: '₹38', expiry: '2025-09', status: 'Out of Stock' },
-  { id: 'M006', name: 'Levothyroxine 50mcg', category: 'Thyroid', stock: 95, minStock: 25, price: '₹55', expiry: '2025-08', status: 'In Stock' },
-  { id: 'M007', name: 'Digoxin 0.25mg', category: 'Cardiac', stock: 18, minStock: 20, price: '₹95', expiry: '2024-11', status: 'Low Stock' },
-  { id: 'M008', name: 'Furosemide 40mg', category: 'Cardiac', stock: 110, minStock: 40, price: '₹28', expiry: '2025-07', status: 'In Stock' },
-];
-
-const incomingPrescriptions = [
-  { id: 'RX-2024-001', patient: 'Amit Sharma', doctor: 'Dr. Rajesh Kumar', receivedAt: '16 Jan, 09:45 AM', medicines: ['Metformin 500mg x90', 'Atorvastatin 20mg x30'], total: '₹170', status: 'Pending' },
-  { id: 'RX-2024-002', patient: 'Priya Verma', doctor: 'Dr. Rajesh Kumar', receivedAt: '16 Jan, 10:30 AM', medicines: ['Amlodipine 5mg x30', 'Losartan 50mg x30'], total: '₹220', status: 'Pending' },
-  { id: 'RX-2024-003', patient: 'Meera Gupta', doctor: 'Dr. Anjali Patel', receivedAt: '16 Jan, 11:00 AM', medicines: ['Montelukast 10mg x30', 'Salbutamol Inhaler'], total: '₹580', status: 'Under Review' },
-  { id: 'RX-2024-004', patient: 'Kiran Bhat', doctor: 'Dr. Vikram Singh', receivedAt: '16 Jan, 11:30 AM', medicines: ['Insulin Glargine 10U x30'], total: '₹1,250', status: 'Pending' },
-];
-
-const orders = [
-  { id: 'ORD-001', patient: 'Amit Sharma', rx: 'RX-2024-001', date: '16 Jan 2024', total: '₹170', status: 'Ready for Delivery', address: 'HSR Layout, Bangalore' },
-  { id: 'ORD-002', patient: 'Priya Verma', rx: 'RX-2024-002', date: '16 Jan 2024', total: '₹220', status: 'Packing', address: 'Koramangala, Bangalore' },
-  { id: 'ORD-003', patient: 'Sunita Devi', rx: 'RX-2023-997', date: '15 Jan 2024', total: '₹55', status: 'Out for Delivery', address: 'Indiranagar, Bangalore' },
-  { id: 'ORD-004', patient: 'Kiran Bhat', rx: 'RX-2023-996', date: '15 Jan 2024', total: '₹1,250', status: 'Delivered', address: 'Whitefield, Bangalore' },
-  { id: 'ORD-005', patient: 'Anita Singh', rx: 'RX-2023-995', date: '14 Jan 2024', total: '₹320', status: 'Delivered', address: 'JP Nagar, Bangalore' },
-];
-
-const customers = [
-  { id: 'C001', name: 'Amit Sharma', phone: '+91 98765 43210', orders: 8, lastOrder: '16 Jan 2024', totalSpend: '₹3,240' },
-  { id: 'C002', name: 'Priya Verma', phone: '+91 87654 32109', orders: 5, lastOrder: '16 Jan 2024', totalSpend: '₹1,890' },
-  { id: 'C003', name: 'Suresh Kumar', phone: '+91 76543 21098', orders: 12, lastOrder: '14 Jan 2024', totalSpend: '₹8,560' },
-  { id: 'C004', name: 'Meera Gupta', phone: '+91 65432 10987', orders: 3, lastOrder: '13 Jan 2024', totalSpend: '₹1,120' },
-  { id: 'C005', name: 'Rajiv Patel', phone: '+91 54321 09876', orders: 18, lastOrder: '12 Jan 2024', totalSpend: '₹15,300' },
-];
-
-const pharmNotifications = [
-  { id: 1, title: 'New Prescription Order', body: 'Amit Sharma - 3 medicines to dispense', time: '5 min ago', read: false, color: '#2563EB' },
-  { id: 2, title: 'Low Stock Alert', body: 'Atorvastatin 20mg - Only 32 units remaining', time: '30 min ago', read: false, color: '#FF6B6B' },
-  { id: 3, title: 'Order Ready for Dispatch', body: 'ORD-001 is packed and ready for delivery', time: '1 hour ago', read: false, color: '#22C55E' },
-  { id: 4, title: 'Low Stock Alert', body: 'Digoxin 0.25mg - Only 18 units remaining', time: '2 hours ago', read: true, color: '#F59E0B' },
-  { id: 5, title: 'Order Delivered', body: 'ORD-004 (Kiran Bhat) successfully delivered', time: '3 hours ago', read: true, color: '#00B894' },
-];
+const weeklyOrders: WeeklyOrders[] = [];
+const monthlyRevenue: MonthlyRevenue[] = [];
+const categoryData: CategoryData[] = [];
+const inventory: InventoryItem[] = [];
+const incomingPrescriptions: IncomingPrescription[] = [];
+const orders: OrderItem[] = [];
+const customers: CustomerItem[] = [];
+const pharmNotifications: NotificationItem[] = [];
 
 const statusColor = (status: string) => {
   const map: Record<string, { bg: string; text: string }> = {
@@ -109,8 +60,35 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
   const [activeView, setActiveView] = useState<PharmView>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [incomingList, setIncomingList] = useState(incomingPrescriptions);
-  const [notifList, setNotifList] = useState(pharmNotifications);
+  const [incomingList, setIncomingList] = useState<IncomingPrescription[]>(incomingPrescriptions);
+  const [notifList, setNotifList] = useState<NotificationItem[]>(pharmNotifications);
+  const [inventoryList, setInventoryList] = useState<InventoryItem[]>(inventory);
+  const [orderList, setOrderList] = useState<OrderItem[]>(orders);
+
+  const [weeklyData, setWeeklyData] = useState<WeeklyOrders[]>(weeklyOrders);
+
+  React.useEffect(() => {
+    async function loadPharmData() {
+      try {
+        const [rxRes, invRes, ordRes, notifRes, repRes] = await Promise.all([
+          fetch('/api/pharmacist/prescriptions').then((r) => r.json()),
+          fetch('/api/pharmacist/inventory').then((r) => r.json()),
+          fetch('/api/pharmacist/orders').then((r) => r.json()),
+          fetch('/api/pharmacist/notifications').then((r) => r.json()),
+          fetch('/api/pharmacist/reports').then((r) => r.json()),
+        ]);
+
+        if (Array.isArray(rxRes.data)) setIncomingList(rxRes.data);
+        if (Array.isArray(invRes.data)) setInventoryList(invRes.data);
+        if (Array.isArray(ordRes.data)) setOrderList(ordRes.data);
+        if (Array.isArray(notifRes.data)) setNotifList(notifRes.data);
+        if (repRes.data?.weeklyOrders) setWeeklyData(repRes.data.weeklyOrders);
+      } catch (e) {
+        console.error('Failed to load pharmacist portal data', e);
+      }
+    }
+    loadPharmData();
+  }, []);
 
   const navItems = [
     { id: 'dashboard' as PharmView, label: 'Dashboard', icon: LayoutDashboard },
@@ -187,10 +165,10 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Pending Orders', value: '12', icon: Clock, color: '#F59E0B', bg: '#FFFBEB', change: '4 urgent' },
-          { label: 'Ready for Delivery', value: '8', icon: Package, color: '#00B894', bg: '#F0FDF4', change: '+3 today' },
-          { label: 'Low Stock Medicines', value: '5', icon: AlertCircle, color: '#FF6B6B', bg: '#FFF5F5', change: 'Needs reorder' },
-          { label: "Today's Revenue", value: '₹21.5K', icon: DollarSign, color: '#2563EB', bg: '#EFF6FF', change: '+18% vs yesterday' },
+          { label: 'Pending Orders', value: String(orderList.filter(o => o.status === 'Processing' || o.status === 'PENDING').length), icon: Clock, color: '#F59E0B', bg: '#FFFBEB', change: 'Awaiting fulfillment' },
+          { label: 'Ready / Completed', value: String(orderList.filter(o => o.status === 'Ready' || o.status === 'COMPLETED' || o.status === 'Delivered').length), icon: Package, color: '#00B894', bg: '#F0FDF4', change: 'Processed orders' },
+          { label: 'Low Stock Medicines', value: String(inventoryList.filter(i => i.status === 'Low Stock' || i.status === 'Out of Stock').length), icon: AlertCircle, color: '#FF6B6B', bg: '#FFF5F5', change: 'Needs reorder' },
+          { label: "Total Inventory Items", value: String(inventoryList.length), icon: DollarSign, color: '#2563EB', bg: '#EFF6FF', change: 'In catalog' },
         ].map((stat, i) => (
           <Card key={i} className="border-0 shadow-sm">
             <CardContent className="p-5">
@@ -215,7 +193,7 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={weeklyOrders} barSize={20}>
+              <BarChart data={weeklyData} barSize={20}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
                 <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
@@ -252,7 +230,7 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
             <CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Low Stock Alert</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {inventory.filter(m => m.status !== 'In Stock').map((med, i) => (
+            {inventoryList.filter(m => m.status !== 'In Stock').map((med, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: '#F8FAFC' }}>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: '0.8rem', color: '#1A1A2E' }}>{med.name}</p>
@@ -268,13 +246,13 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
             ))}
           </CardContent>
         </Card>
-
+ 
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Recent Orders</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {orders.slice(0, 4).map((order, i) => (
+            {orderList.slice(0, 4).map((order, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: '#F8FAFC' }}>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: '0.8rem', color: '#1A1A2E' }}>{order.patient}</p>
@@ -359,10 +337,7 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
                 </tr>
               </thead>
               <tbody>
-                {incomingList.filter(r => r.status === 'Verified').concat([
-                  { id: 'RX-2023-997', patient: 'Sunita Devi', doctor: 'Dr. Rajesh Kumar', receivedAt: '15 Jan', medicines: ['Levothyroxine 50mcg x90'], total: '₹165', status: 'Verified' },
-                  { id: 'RX-2023-996', patient: 'Kiran Bhat', doctor: 'Dr. Anjali Patel', receivedAt: '15 Jan', medicines: ['Insulin Glargine x30'], total: '₹1,250', status: 'Verified' },
-                ]).map((rx, i, arr) => (
+                {incomingList.filter(r => r.status === 'Verified' || r.status === 'FILLED' || r.status === 'APPROVED').map((rx, i, arr) => (
                   <tr key={rx.id} style={{ borderBottom: i < arr.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                     <td className="px-4 py-3" style={{ fontSize: '0.8rem', color: '#00B894', fontWeight: 600 }}>{rx.id}</td>
                     <td className="px-4 py-3" style={{ fontSize: '0.8rem', color: '#1A1A2E', fontWeight: 500 }}>{rx.patient}</td>
@@ -389,7 +364,7 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
   );
 
   const InventoryView = () => {
-    const filtered = inventory.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filtered = inventoryList.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.category.toLowerCase().includes(searchQuery.toLowerCase()));
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -454,7 +429,7 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
     <div className="space-y-6">
       <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1A1A2E' }}>Orders</h2>
       <div className="space-y-4">
-        {orders.map(order => (
+        {orderList.map(order => (
           <Card key={order.id} className="border-0 shadow-sm">
             <CardContent className="p-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
