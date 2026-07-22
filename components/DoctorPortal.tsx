@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import {
@@ -22,45 +21,17 @@ interface DoctorPortalProps {
   onBack: () => void;
 }
 
-const weeklyData = [
-  { day: 'Mon', prescriptions: 8 }, { day: 'Tue', prescriptions: 12 },
-  { day: 'Wed', prescriptions: 7 }, { day: 'Thu', prescriptions: 15 },
-  { day: 'Fri', prescriptions: 11 }, { day: 'Sat', prescriptions: 6 },
-  { day: 'Sun', prescriptions: 4 },
-];
+type WeeklyData = { day: string; prescriptions: number };
+type PatientData = { id: string; name: string; age: number; gender: string; condition: string; lastVisit: string; status: string; phone?: string };
+type ApprovedRxData = { id: string; patient: string; approvedAt: string; medicines: string; duration: string };
+type RejectedRxData = { id: string; patient: string; rejectedAt: string; reason: string; medicines: string };
+type NotificationData = { id: string; type: string; title: string; body: string; time: string; read: boolean; color: string };
 
-const patients = [
-  { id: 'P001', name: 'Amit Sharma', age: 45, gender: 'Male', condition: 'Diabetes Type 2', lastVisit: '15 Jan 2024', status: 'Active', phone: '+91 98765 43210' },
-  { id: 'P002', name: 'Priya Verma', age: 32, gender: 'Female', condition: 'Hypertension', lastVisit: '14 Jan 2024', status: 'Active', phone: '+91 87654 32109' },
-  { id: 'P003', name: 'Suresh Kumar', age: 58, gender: 'Male', condition: 'Cardiac Arrhythmia', lastVisit: '13 Jan 2024', status: 'Critical', phone: '+91 76543 21098' },
-  { id: 'P004', name: 'Meera Gupta', age: 29, gender: 'Female', condition: 'Asthma', lastVisit: '12 Jan 2024', status: 'Follow-up', phone: '+91 65432 10987' },
-  { id: 'P005', name: 'Rajiv Patel', age: 67, gender: 'Male', condition: 'Heart Failure', lastVisit: '10 Jan 2024', status: 'Critical', phone: '+91 54321 09876' },
-  { id: 'P006', name: 'Sunita Devi', age: 42, gender: 'Female', condition: 'Thyroid Disorder', lastVisit: '9 Jan 2024', status: 'Active', phone: '+91 43210 98765' },
-  { id: 'P007', name: 'Kiran Bhat', age: 38, gender: 'Male', condition: 'Diabetes Type 1', lastVisit: '8 Jan 2024', status: 'Active', phone: '+91 32109 87654' },
-  { id: 'P008', name: 'Anita Singh', age: 55, gender: 'Female', condition: 'Rheumatoid Arthritis', lastVisit: '7 Jan 2024', status: 'Follow-up', phone: '+91 21098 76543' },
-];
-
-const approvedRx = [
-  { id: 'RX-2024-000', patient: 'Suresh Kumar', approvedAt: '14 Jan 2024', medicines: 'Carvedilol 12.5mg, Bisoprolol 5mg', duration: '30 days' },
-  { id: 'RX-2023-998', patient: 'Meera Gupta', approvedAt: '13 Jan 2024', medicines: 'Montelukast 10mg, Salbutamol Inhaler', duration: '15 days' },
-  { id: 'RX-2023-997', patient: 'Sunita Devi', approvedAt: '12 Jan 2024', medicines: 'Levothyroxine 50mcg', duration: '90 days' },
-  { id: 'RX-2023-996', patient: 'Kiran Bhat', approvedAt: '11 Jan 2024', medicines: 'Insulin Glargine 10 units', duration: '30 days' },
-  { id: 'RX-2023-995', patient: 'Anita Singh', approvedAt: '10 Jan 2024', medicines: 'Methotrexate 10mg, Folic Acid 5mg', duration: '30 days' },
-];
-
-const rejectedRx = [
-  { id: 'RX-2023-990', patient: 'Unknown Patient', rejectedAt: '10 Jan 2024', reason: 'Insufficient patient information provided', medicines: 'Tramadol 50mg' },
-  { id: 'RX-2023-985', patient: 'Rahul Mehta', rejectedAt: '8 Jan 2024', reason: 'Prescription dosage exceeds recommended limit', medicines: 'Diazepam 10mg' },
-  { id: 'RX-2023-980', patient: 'Seema Rao', rejectedAt: '5 Jan 2024', reason: 'Drug interaction risk detected with existing medication', medicines: 'Warfarin 5mg' },
-];
-
-const notifications = [
-  { id: 1, type: 'prescription', title: 'New Prescription Request', body: 'Amit Sharma uploaded a new prescription for review', time: '5 min ago', read: false, color: '#FF6B6B' },
-  { id: 2, type: 'reminder', title: 'Follow-up Reminder', body: 'Suresh Kumar is due for prescription renewal this week', time: '30 min ago', read: false, color: '#F59E0B' },
-  { id: 3, type: 'dispensed', title: 'Prescription Dispensed', body: 'RX-2024-000 for Suresh Kumar was dispensed by MedPlus Pharmacy', time: '1 hour ago', read: false, color: '#2563EB' },
-  { id: 4, type: 'followup', title: 'Patient Follow-up Due', body: 'Suresh Kumar is due for follow-up today', time: '2 hours ago', read: true, color: '#00B894' },
-  { id: 5, type: 'prescription', title: 'Prescription Dispensed', body: 'RX-2023-997 for Sunita Devi was dispensed by pharmacy', time: '3 hours ago', read: true, color: '#8B5CF6' },
-];
+const weeklyData: WeeklyData[] = [];
+const patients: PatientData[] = [];
+const approvedRx: ApprovedRxData[] = [];
+const rejectedRx: RejectedRxData[] = [];
+const notifications: NotificationData[] = [];
 
 const statusColor = (status: string) => {
   const map: Record<string, { bg: string; text: string }> = {
@@ -80,8 +51,33 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateRx, setShowCreateRx] = useState(false);
-  const [notifList, setNotifList] = useState(notifications);
+  const [notifList, setNotifList] = useState<NotificationData[]>(notifications);
+  const [patientList, setPatientList] = useState<PatientData[]>(patients);
+  const [approvedRxList, setApprovedRxList] = useState<ApprovedRxData[]>(approvedRx);
   const [rxMedicines, setRxMedicines] = useState([{ name: '', dose: '', freq: '', duration: '' }]);
+
+  const markAllRead = () => {
+    setNotifList((list) => list.map((n) => ({ ...n, read: true })));
+  };
+
+  React.useEffect(() => {
+    async function loadDoctorData() {
+      try {
+        const [patientsRes, rxRes, notifRes] = await Promise.all([
+          fetch('/api/doctor/patients').then((r) => r.json()),
+          fetch('/api/doctor/prescriptions').then((r) => r.json()),
+          fetch('/api/doctor/notifications').then((r) => r.json()),
+        ]);
+
+        if (Array.isArray(patientsRes.data)) setPatientList(patientsRes.data);
+        if (Array.isArray(rxRes.data)) setApprovedRxList(rxRes.data);
+        if (Array.isArray(notifRes.data)) setNotifList(notifRes.data);
+      } catch (e) {
+        console.error('Failed to load doctor portal data', e);
+      }
+    }
+    loadDoctorData();
+  }, []);
 
   const navItems = [
     { id: 'dashboard' as DoctorView, label: 'Dashboard', icon: LayoutDashboard },
@@ -92,8 +88,6 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
     { id: 'notifications' as DoctorView, label: 'Notifications', icon: Bell, badge: notifList.filter(n => !n.read).length },
     { id: 'profile' as DoctorView, label: 'Profile', icon: User },
   ];
-
-  const markAllRead = () => setNotifList(list => list.map(n => ({ ...n, read: true })));
 
   const Sidebar = () => (
     <div style={{ backgroundColor: '#1e293b', width: '260px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -166,10 +160,10 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Patients', value: '125', icon: Users, color: '#2563EB', bg: '#EFF6FF', change: '+3 this week' },
-          { label: "Today's Prescriptions", value: '8', icon: FileText, color: '#00B894', bg: '#F0FDF4', change: '+2 vs yesterday' },
-          { label: 'Prescriptions Issued', value: String(approvedRx.length), icon: ClipboardList, color: '#8B5CF6', bg: '#F5F3FF', change: '+2 this week' },
-          { label: 'Issued Today', value: '14', icon: CheckCircle, color: '#22C55E', bg: '#F0FDF4', change: '+5 vs yesterday' },
+          { label: 'Total Patients', value: String(patientList.length), icon: Users, color: '#2563EB', bg: '#EFF6FF', change: 'Registered patients' },
+          { label: "Active Patients", value: String(patientList.filter(p => p.status === 'Active').length), icon: FileText, color: '#00B894', bg: '#F0FDF4', change: 'Active records' },
+          { label: 'Prescriptions Issued', value: String(approvedRxList.length), icon: ClipboardList, color: '#8B5CF6', bg: '#F5F3FF', change: 'Total issued' },
+          { label: 'Recent Prescriptions', value: String(approvedRxList.length), icon: CheckCircle, color: '#22C55E', bg: '#F0FDF4', change: 'Total verified' },
         ].map((stat, i) => (
           <Card key={i} className="border-0 shadow-sm">
             <CardContent className="p-5">
@@ -218,7 +212,7 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
             <CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Recent Prescriptions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {approvedRx.slice(0, 3).map(rx => (
+            {approvedRxList.slice(0, 3).map(rx => (
               <div key={rx.id} className="p-3 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors cursor-pointer"
                 onClick={() => setActiveView('approved')}>
                 <div className="flex items-start justify-between mb-1">
@@ -232,14 +226,14 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
           </CardContent>
         </Card>
       </div>
-
+ 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>Recent Patients</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {patients.slice(0, 4).map(p => (
+            {patientList.slice(0, 4).map(p => (
               <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#EFF6FF' }}>
@@ -262,7 +256,7 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
   );
 
   const PatientsView = () => {
-    const filtered = patients.filter(p =>
+    const filtered = patientList.filter(p =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.condition.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -338,8 +332,8 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
                 </tr>
               </thead>
               <tbody>
-                {approvedRx.map((rx, i) => (
-                  <tr key={rx.id} style={{ borderBottom: i < approvedRx.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                {approvedRxList.map((rx, i) => (
+                  <tr key={rx.id} style={{ borderBottom: i < approvedRxList.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                     <td className="px-4 py-3" style={{ fontSize: '0.8rem', color: '#2563EB', fontWeight: 600 }}>{rx.id}</td>
                     <td className="px-4 py-3" style={{ fontSize: '0.8rem', color: '#1A1A2E', fontWeight: 500 }}>{rx.patient}</td>
                     <td className="px-4 py-3" style={{ fontSize: '0.8rem', color: '#6B7280', maxWidth: '200px' }}>{rx.medicines}</td>
@@ -399,7 +393,7 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
         </div>
       </div>
       <div className="space-y-4">
-        {patients.map(p => (
+        {patientList.map(p => (
           <Card key={p.id} className="border-0 shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between gap-4 mb-3">
@@ -595,7 +589,7 @@ export function DoctorPortal({ onBack }: DoctorPortalProps) {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>Doctor's Notes</label>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>Doctor&apos;s Notes</label>
             <textarea className="w-full p-3 border rounded-xl resize-none" rows={3} placeholder="Special instructions, follow-up notes..."
               style={{ fontSize: '0.875rem', outline: 'none', borderColor: '#E5E7EB' }} />
           </div>

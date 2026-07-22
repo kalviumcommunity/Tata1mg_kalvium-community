@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
-  Eye, EyeOff, Heart, Stethoscope, Pill, Building2, Users,
+  Eye, EyeOff, Heart, Stethoscope, Pill,
   CheckCircle, AlertCircle, ArrowLeft, Shield, Lock, Mail,
-  User, FileText, ChevronRight
+  User, ChevronRight
 } from 'lucide-react';
 
 type Role = 'doctor' | 'pharmacist' | 'admin';
@@ -73,53 +73,64 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const switchTab = (t: AuthTab) => {
     setTab(t);
     setErrors({});
     setSubmitted(false);
     setForgotSent(false);
+    setApiError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+    setApiError('');
     const errs = validate(tab, { name, email, password, confirmPassword, role, terms });
     setErrors(errs);
-    if (Object.keys(errs).length > 0) {
-      setStatusMessage(null);
-      return;
-    }
+    if (Object.keys(errs).length > 0) return;
 
-    setIsSubmitting(true);
-    setStatusMessage(null);
-
+    setLoading(true);
     try {
-      const endpoint = tab === 'signup' ? '/api/auth/register' : '/api/auth/login';
-      const payload = tab === 'signup'
-        ? { name, email, password, role }
-        : { email, password };
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
+      if (tab === 'login') {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          setApiError(data.error || 'Invalid email or password.');
+          return;
+        }
+        const serverRole = (data.user?.role as string || '').toLowerCase() as Role;
+        onLogin(serverRole);
+      } else {
+        if (!role) return;
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role: role.toUpperCase(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          setApiError(data.error || 'Registration failed. Please try again.');
+          return;
+        }
+        const serverRole = (data.user?.role as string || '').toLowerCase() as Role;
+        onLogin(serverRole);
       }
-
-      const resolvedRole = String(data.user?.role || role || (email.includes('pharm') ? 'pharmacist' : email.includes('admin') ? 'admin' : 'doctor')).toLowerCase() as Role;
-      setStatusMessage(tab === 'signup' ? 'Account created successfully. Redirecting…' : 'Signed in successfully. Redirecting…');
-      onLogin(resolvedRole);
-    } catch (err) {
-      setStatusMessage(err instanceof Error ? err.message : 'Authentication failed');
+    } catch {
+      setApiError('Network error. Please check your connection.');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -419,17 +430,19 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
               </div>
             )}
 
-            {/* Submit */}
-            {statusMessage && (
-              <div className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: statusMessage.toLowerCase().includes('success') ? '#BBF7D0' : '#FECACA', backgroundColor: statusMessage.toLowerCase().includes('success') ? '#F0FDF4' : '#FEF2F2', color: statusMessage.toLowerCase().includes('success') ? '#166534' : '#991B1B' }}>
-                {statusMessage}
+            {/* API Error */}
+            {apiError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: '#FFF5F5', border: '1px solid #FCA5A5' }}>
+                <AlertCircle className="w-4 h-4 shrink-0" style={{ color: '#EF4444' }} />
+                <p style={{ fontSize: '0.8rem', color: '#EF4444' }}>{apiError}</p>
               </div>
             )}
 
-            <Button type="submit" className="w-full h-11 text-white mt-2"
-              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700 }} disabled={isSubmitting}>
-              {isSubmitting ? 'Please wait…' : tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
-              <ChevronRight className="w-4 h-4 ml-1" />
+            {/* Submit */}
+            <Button type="submit" className="w-full h-11 text-white mt-2" disabled={loading}
+              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700, opacity: loading ? 0.7 : 1 }}>
+              {loading ? 'Please wait…' : tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
+              {!loading && <ChevronRight className="w-4 h-4 ml-1" />}
             </Button>
 
             {/* Divider */}

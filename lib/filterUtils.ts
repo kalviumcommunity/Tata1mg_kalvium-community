@@ -10,7 +10,9 @@ export interface PaginationResult<T> {
   };
 }
 
-export function applyFiltersAndSearch<T extends Record<string, any>>(
+type FilterableRecord = Record<string, unknown>;
+
+export function applyFiltersAndSearch<T extends FilterableRecord>(
   items: T[],
   query?: ListQueryInput
 ): T[] {
@@ -18,7 +20,7 @@ export function applyFiltersAndSearch<T extends Record<string, any>>(
 
   // Filter by status
   if (query?.status) {
-    filtered = filtered.filter((item) => (item as any).status === query.status);
+    filtered = filtered.filter((item) => (item.status as string) === query.status);
   }
 
   // Search by name or email
@@ -26,9 +28,9 @@ export function applyFiltersAndSearch<T extends Record<string, any>>(
     const searchLower = query.search.toLowerCase();
     filtered = filtered.filter(
       (item) =>
-        (item as any).name?.toLowerCase().includes(searchLower) ||
-        (item as any).email?.toLowerCase().includes(searchLower) ||
-        (item as any).message?.toLowerCase().includes(searchLower)
+        (item.name as string | undefined)?.toLowerCase().includes(searchLower) ||
+        (item.email as string | undefined)?.toLowerCase().includes(searchLower) ||
+        (item.message as string | undefined)?.toLowerCase().includes(searchLower)
     );
   }
 
@@ -36,13 +38,13 @@ export function applyFiltersAndSearch<T extends Record<string, any>>(
   if (query?.sortBy) {
     const sortOrder = query.sortOrder === 'desc' ? -1 : 1;
     filtered.sort((a, b) => {
-      const aVal = (a as any)[query.sortBy!];
-      const bVal = (b as any)[query.sortBy!];
+      const aVal = a[query.sortBy!];
+      const bVal = b[query.sortBy!];
 
-      if (typeof aVal === 'string') {
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
         return aVal.localeCompare(bVal) * sortOrder;
       }
-      return (aVal > bVal ? 1 : -1) * sortOrder;
+      return ((aVal as number) > (bVal as number) ? 1 : -1) * sortOrder;
     });
   }
 
@@ -66,7 +68,7 @@ export function paginate<T>(items: T[], page: number = 1, limit: number = 10): P
   };
 }
 
-export function filterAndPaginate<T extends Record<string, any>>(
+export function filterAndPaginate<T extends FilterableRecord>(
   items: T[],
   query?: ListQueryInput
 ): PaginationResult<T> {

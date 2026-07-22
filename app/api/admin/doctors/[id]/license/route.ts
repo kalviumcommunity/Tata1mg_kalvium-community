@@ -1,53 +1,75 @@
-import { findDoctor } from '@/lib/adminMockData';
+import { NextRequest } from 'next/server';
+import { promises as fs } from 'fs';
+import path from 'path';
+import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/auth';
 import { jsonError, jsonSuccess } from '@/lib/apiResponse';
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+const VALID_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const auth = requireRole(request, 'ADMIN');
+  if (auth.error) return jsonError(auth.error, auth.error === 'Unauthorized' ? 401 : 403);
+
   try {
-    const doctor = findDoctor(params.id);
-    if (!doctor) {
-      return jsonError('Doctor not found', 404);
-    }
+    const doctor = await prisma.doctorProfile.findUnique({ where: { id: params.id } });
+    if (!doctor) return jsonError('Doctor not found', 404);
 
     const formData = await request.formData();
-    const file = formData.get('license') as File;
+    const file = formData.get('license') as File | null;
+    if (!file) return jsonError('No file provided');
 
-    if (!file) {
-      return jsonError('No file provided');
-    }
+    if (!VALID_MIME_TYPES.includes(file.type))
+      return jsonError('Invalid file type. Accepted: PDF, JPG, PNG, WEBP');
 
-    const validMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-    if (!validMimeTypes.includes(file.type)) {
-      return jsonError('Invalid file type. Accepted: PDF, JPG, PNG');
-    }
+    if (file.size > MAX_FILE_SIZE)
+      return jsonError('File size must be less than 5 MB');
 
-    if (file.size > 5 * 1024 * 1024) {
-      return jsonError('File size must be less than 5MB');
-    }
+    // Persist file to public/uploads/licenses/doctors/
+    const ext = path.extname(file.name) || '.bin';
+    const fileName = `doctor_${params.id}_${Date.now()}${ext}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'licenses', 'doctors');
+    await fs.mkdir(uploadDir, { recursive: true });
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    await fs.writeFile(path.join(uploadDir, fileName), bytes);
 
-    const fileName = `doctor_${params.id}_license_${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`;
-    const filePath = `/uploads/licenses/doctors/${fileName}`;
+    const fileUrl = `/uploads/licenses/doctors/${fileName}`;
 
-    // In mock mode, just update the doctor record with file path
-    doctor.licenseFile = filePath;
-
-    return jsonSuccess(
-      {
-        message: 'License uploaded successfully',
-        filePath,
-        fileName,
-        fileSize: file.size,
-        doctor: {
-          id: doctor.id,
-          name: doctor.name,
-          licenseFile: doctor.licenseFile,
-        },
+    // Create FileUpload record
+    const upload = await prisma.fileUpload.create({
+      data: {
+        fileUrl,
+        fileType: 'LICENSE',
+        mimeType: file.type,
+        uploadedBy: auth.user.userId,
       },
-      201
-    );
-  } catch (error) {
-    if (error instanceof Error) {
-      return jsonError(error.message);
-    }
-    return jsonError('Failed to upload file');
+    });
+
+    // Upsert VerificationRequest linking this document
+    await prisma.verificationRequest.create({
+      data: {
+        entityType: 'DOCTOR',
+        entityId: params.id,
+        status: 'UNDER_REVIEW',
+        supportingDocumentId: upload.id,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.user.userId,
+        action: 'UPLOAD_DOCTOR_LICENSE',
+        details: `Uploaded license for doctor ${params.id}: ${fileUrl}`,
+      },
+    });
+
+    return jsonSuccess({ fileUrl, fileName, fileSize: file.size, uploadId: upload.id }, 201);
+  } catch (err) {
+    console.error('[POST /api/admin/doctors/[id]/license]', err);
+    return jsonError('Failed to upload file', 500);
   }
 }
