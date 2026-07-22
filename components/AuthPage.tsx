@@ -73,8 +73,9 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
-  const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const switchTab = (t: AuthTab) => {
     setTab(t);
@@ -90,9 +91,15 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
     setApiError('');
     const errs = validate(tab, { name, email, password, confirmPassword, role, terms });
     setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0) {
+      setStatusMessage(null);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
+    setStatusMessage(null);
+
     try {
       if (tab === 'login') {
         const res = await fetch('/api/auth/login', {
@@ -100,15 +107,19 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
           setApiError(data.error || 'Invalid email or password.');
           return;
         }
         const serverRole = (data.user?.role as string || '').toLowerCase() as Role;
+        setStatusMessage('Signed in successfully. Redirecting…');
         onLogin(serverRole);
       } else {
-        if (!role) return;
+        if (!role) {
+          setApiError('Please select a role to continue.');
+          return;
+        }
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -119,12 +130,13 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
             role: role.toUpperCase(),
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
           setApiError(data.error || 'Registration failed. Please try again.');
           return;
         }
         const serverRole = (data.user?.role as string || '').toLowerCase() as Role;
+        setStatusMessage('Account created successfully. Redirecting…');
         onLogin(serverRole);
       }
     } catch {
@@ -435,6 +447,11 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
               <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: '#FFF5F5', border: '1px solid #FCA5A5' }}>
                 <AlertCircle className="w-4 h-4 shrink-0" style={{ color: '#EF4444' }} />
                 <p style={{ fontSize: '0.8rem', color: '#EF4444' }}>{apiError}</p>
+              </div>
+            )}
+            {statusMessage && (
+              <div className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: statusMessage.toLowerCase().includes('success') ? '#BBF7D0' : '#FECACA', backgroundColor: statusMessage.toLowerCase().includes('success') ? '#F0FDF4' : '#FEF2F2', color: statusMessage.toLowerCase().includes('success') ? '#166534' : '#991B1B' }}>
+                {statusMessage}
               </div>
             )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -254,6 +254,78 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [doctorsRes, pharmacistsRes, pharmaciesRes, notificationsRes] = await Promise.all([
+          fetch('/api/admin/doctors'),
+          fetch('/api/admin/pharmacists'),
+          fetch('/api/admin/pharmacies'),
+          fetch('/api/admin/notifications'),
+        ]);
+
+        const [doctorsPayload, pharmacistsPayload, pharmaciesPayload, notificationsPayload] = await Promise.all([
+          doctorsRes.json().catch(() => ({})),
+          pharmacistsRes.json().catch(() => ({})),
+          pharmaciesRes.json().catch(() => ({})),
+          notificationsRes.json().catch(() => ({})),
+        ]);
+
+        const normalizeRows = (payload: any) => {
+          const list = payload?.data?.data ?? payload?.data ?? payload;
+          return Array.isArray(list) ? list : [];
+        };
+
+        const mappedDoctors = normalizeRows(doctorsPayload).map((item: any) => ({
+          id: item.id,
+          name: item.name || item.email || 'Doctor',
+          regNo: item.regNo || item.licenseNumber || 'N/A',
+          hospital: item.hospital || 'Pending review',
+          specialization: item.specialization || 'General Medicine',
+          licenseFile: item.licenseFile || 'license.pdf',
+          status: item.status ? item.status.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Pending',
+        }));
+
+        const mappedPharmacists = normalizeRows(pharmacistsPayload).map((item: any) => ({
+          id: item.id,
+          name: item.name || item.email || 'Pharmacist',
+          pharmacyLicense: item.pharmacyLicense || item.licenseNumber || 'N/A',
+          regNo: item.regNo || 'N/A',
+          experience: item.experience || 'Pending review',
+          status: item.status ? item.status.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Pending',
+        }));
+
+        const mappedPharmacies = normalizeRows(pharmaciesPayload).map((item: any) => ({
+          id: item.id,
+          name: item.name || item.email || 'Pharmacy',
+          drugLicense: item.drugLicense || item.licenseNumber || 'N/A',
+          gst: item.gst || 'N/A',
+          address: item.address || item.city || 'Pending review',
+          owner: item.owner || 'Pending review',
+          status: item.status ? item.status.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Pending',
+        }));
+
+        const mappedNotifications = normalizeRows(notificationsPayload).map((item: any) => ({
+          id: item.id || item._id || Date.now(),
+          title: item.title || item.message || 'New notification',
+          body: item.body || item.message || 'Review pending action',
+          time: item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Just now',
+          read: Boolean(item.read),
+          color: item.type === 'error' ? '#FF6B6B' : item.type === 'success' ? '#00B894' : '#2563EB',
+        }));
+
+        if (mappedDoctors.length) setDoctorList(mappedDoctors);
+        if (mappedPharmacists.length) setPharmList(mappedPharmacists);
+        if (mappedPharmacies.length) setPharmacyList(mappedPharmacies);
+        if (mappedNotifications.length) setNotifList(mappedNotifications);
+      } catch {
+        // Keep the existing static fallback data when the backend is unavailable.
+      }
+    };
+
+    loadData();
+  }, []);
 
   const navItems = [
     { id: 'overview' as AdminView, label: 'Overview', icon: LayoutDashboard },
