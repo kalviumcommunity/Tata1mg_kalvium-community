@@ -73,6 +73,8 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const switchTab = (t: AuthTab) => {
     setTab(t);
@@ -81,20 +83,43 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
     setForgotSent(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     const errs = validate(tab, { name, email, password, confirmPassword, role, terms });
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      if (tab === 'signup' && role) {
-        onLogin(role);
-      } else if (tab === 'login') {
-        let loginRole: Role = 'doctor'; // Default to doctor portal to prevent kicking out to landing page
-        if (email.includes('pharm')) loginRole = 'pharmacist';
-        if (email.includes('admin')) loginRole = 'admin';
-        onLogin(loginRole);
+    if (Object.keys(errs).length > 0) {
+      setStatusMessage(null);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMessage(null);
+
+    try {
+      const endpoint = tab === 'signup' ? '/api/auth/register' : '/api/auth/login';
+      const payload = tab === 'signup'
+        ? { name, email, password, role }
+        : { email, password };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Authentication failed');
       }
+
+      const resolvedRole = String(data.user?.role || role || (email.includes('pharm') ? 'pharmacist' : email.includes('admin') ? 'admin' : 'doctor')).toLowerCase() as Role;
+      setStatusMessage(tab === 'signup' ? 'Account created successfully. Redirecting…' : 'Signed in successfully. Redirecting…');
+      onLogin(resolvedRole);
+    } catch (err) {
+      setStatusMessage(err instanceof Error ? err.message : 'Authentication failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -395,9 +420,15 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
             )}
 
             {/* Submit */}
+            {statusMessage && (
+              <div className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: statusMessage.toLowerCase().includes('success') ? '#BBF7D0' : '#FECACA', backgroundColor: statusMessage.toLowerCase().includes('success') ? '#F0FDF4' : '#FEF2F2', color: statusMessage.toLowerCase().includes('success') ? '#166534' : '#991B1B' }}>
+                {statusMessage}
+              </div>
+            )}
+
             <Button type="submit" className="w-full h-11 text-white mt-2"
-              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700 }}>
-              {tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
+              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700 }} disabled={isSubmitting}>
+              {isSubmitting ? 'Please wait…' : tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
 
