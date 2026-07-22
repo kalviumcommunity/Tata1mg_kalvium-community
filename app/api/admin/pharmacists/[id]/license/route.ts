@@ -26,7 +26,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const fileName = `pharmacist_${params.id}_${Date.now()}${ext}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'licenses', 'pharmacists');
     await fs.mkdir(uploadDir, { recursive: true });
-    await fs.writeFile(path.join(uploadDir, fileName), Buffer.from(await file.arrayBuffer()));
+    await fs.writeFile(path.join(uploadDir, fileName), new Uint8Array(await file.arrayBuffer()));
 
     const fileUrl = `/uploads/licenses/pharmacists/${fileName}`;
     const upload = await prisma.fileUpload.create({
