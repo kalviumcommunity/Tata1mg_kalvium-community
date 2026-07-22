@@ -93,6 +93,7 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       setStatusMessage(null);
+      setLoading(false);
       return;
     }
 
@@ -454,6 +455,7 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
               </div>
             )}
 
+            {/* Submit */}
             <Button type="submit" className="w-full h-11 text-white mt-2" disabled={loading}
               style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', fontSize: '0.95rem', fontWeight: 700, opacity: loading ? 0.7 : 1 }}>
               {loading ? 'Please wait…' : tab === 'login' ? 'Log In to Dashboard' : 'Create My Account'}
