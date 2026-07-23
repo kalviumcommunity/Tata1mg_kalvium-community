@@ -24,6 +24,10 @@ interface FormErrors {
   confirmPassword?: string;
   role?: string;
   terms?: string;
+  specialization?: string;
+  qualifications?: string;
+  licenseNumber?: string;
+  phone?: string;
 }
 
 const roles: { id: Role; label: string; icon: React.ElementType; color: string; bg: string }[] = [
@@ -35,6 +39,7 @@ const roles: { id: Role; label: string; icon: React.ElementType; color: string; 
 function validate(tab: AuthTab, fields: {
   name: string; email: string; password: string; confirmPassword: string;
   role: Role | ''; terms: boolean;
+  specialization: string; qualifications: string; licenseNumber: string; phone: string;
 }): FormErrors {
   const errors: FormErrors = {};
   if (tab === 'signup' && !fields.name.trim()) errors.name = 'Full name is required';
@@ -55,8 +60,28 @@ function validate(tab: AuthTab, fields: {
       errors.confirmPassword = 'Passwords do not match';
     }
     if (!fields.terms) errors.terms = 'You must accept the terms to continue';
+    if (!fields.role) {
+      errors.role = 'Please select your role';
+    } else {
+      if (fields.role === 'doctor') {
+        if (!fields.specialization.trim()) errors.specialization = 'Specialization is required';
+        if (!fields.licenseNumber.trim()) errors.licenseNumber = 'License number is required';
+        if (!fields.phone.trim()) {
+          errors.phone = 'Phone number is required';
+        } else if (fields.phone.length < 10) {
+          errors.phone = 'Phone must be at least 10 digits';
+        }
+      } else if (fields.role === 'pharmacist') {
+        if (!fields.qualifications.trim()) errors.qualifications = 'Qualifications are required';
+        if (!fields.licenseNumber.trim()) errors.licenseNumber = 'License number is required';
+        if (!fields.phone.trim()) {
+          errors.phone = 'Phone number is required';
+        } else if (fields.phone.length < 10) {
+          errors.phone = 'Phone must be at least 10 digits';
+        }
+      }
+    }
   }
-  if (tab === 'signup' && !fields.role) errors.role = 'Please select your role';
   return errors;
 }
 
@@ -67,6 +92,10 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<Role | ''>('');
+  const [specialization, setSpecialization] = useState('');
+  const [qualifications, setQualifications] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [phone, setPhone] = useState('');
   const [terms, setTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -83,13 +112,17 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
     setSubmitted(false);
     setForgotSent(false);
     setApiError('');
+    setSpecialization('');
+    setQualifications('');
+    setLicenseNumber('');
+    setPhone('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setApiError('');
-    const errs = validate(tab, { name, email, password, confirmPassword, role, terms });
+    const errs = validate(tab, { name, email, password, confirmPassword, role, terms, specialization, qualifications, licenseNumber, phone });
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       setStatusMessage(null);
@@ -128,6 +161,10 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
             email,
             password,
             role: role.toUpperCase(),
+            specialization: role === 'doctor' ? specialization : undefined,
+            qualifications: role === 'pharmacist' ? qualifications : undefined,
+            licenseNumber: role !== 'admin' ? licenseNumber : undefined,
+            phone: role !== 'admin' ? phone : undefined,
           }),
         });
         const data = await res.json().catch(() => ({}));
@@ -400,7 +437,7 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
                   I am a…
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {roles.map(r => (
+                  {roles.filter(r => r.id !== 'admin').map(r => (
                     <button key={r.id} type="button" onClick={() => setRole(r.id)}
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all text-left"
                       style={{
@@ -422,6 +459,92 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
               </div>
             )}
 
+            {/* Doctor specific fields */}
+            {tab === 'signup' && role === 'doctor' && (
+              <>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    Specialization
+                  </label>
+                  <Input
+                    placeholder="e.g. Cardiology, Pediatrics"
+                    value={specialization}
+                    onChange={e => setSpecialization(e.target.value)}
+                    style={inputStyle('specialization')}
+                  />
+                  <FieldError msg={errors.specialization} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    License Number
+                  </label>
+                  <Input
+                    placeholder="e.g. DOC-12345"
+                    value={licenseNumber}
+                    onChange={e => setLicenseNumber(e.target.value)}
+                    style={inputStyle('licenseNumber')}
+                  />
+                  <FieldError msg={errors.licenseNumber} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    Phone Number
+                  </label>
+                  <Input
+                    type="tel"
+                    placeholder="e.g. 9876543210"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    style={inputStyle('phone')}
+                  />
+                  <FieldError msg={errors.phone} />
+                </div>
+              </>
+            )}
+
+            {/* Pharmacist specific fields */}
+            {tab === 'signup' && role === 'pharmacist' && (
+              <>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    Qualifications
+                  </label>
+                  <Input
+                    placeholder="e.g. B.Pharm, M.Pharm"
+                    value={qualifications}
+                    onChange={e => setQualifications(e.target.value)}
+                    style={inputStyle('qualifications')}
+                  />
+                  <FieldError msg={errors.qualifications} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    License Number
+                  </label>
+                  <Input
+                    placeholder="e.g. PHARM-67890"
+                    value={licenseNumber}
+                    onChange={e => setLicenseNumber(e.target.value)}
+                    style={inputStyle('licenseNumber')}
+                  />
+                  <FieldError msg={errors.licenseNumber} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    Phone Number
+                  </label>
+                  <Input
+                    type="tel"
+                    placeholder="e.g. 8765432109"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    style={inputStyle('phone')}
+                  />
+                  <FieldError msg={errors.phone} />
+                </div>
+              </>
+            )}
+
             {/* Terms — signup only */}
             {tab === 'signup' && (
               <div>
@@ -429,7 +552,7 @@ export function AuthPage({ onLogin, onBack }: AuthPageProps) {
                   <div className="mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
                     style={{ borderColor: terms ? '#2563EB' : errors.terms ? '#EF4444' : '#D1D5DB', backgroundColor: terms ? '#2563EB' : 'white' }}
                     onClick={() => setTerms(v => !v)}>
-                    {terms && <CheckCircle className="w-3 h-3 text-white" />}
+                    {terms && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                   </div>
                   <span style={{ fontSize: '0.8rem', color: '#6B7280', lineHeight: 1.5 }}>
                     I agree to the{' '}
