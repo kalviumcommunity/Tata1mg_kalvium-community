@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
+import { PortalLayout } from './PortalLayout';
 import {
   LayoutDashboard, Stethoscope, Pill, Building2, Bell,
-  Settings, LogOut, Menu, X, Heart, Users, FileText,
+  Settings, X, Heart, Users, FileText,
   TrendingUp, Shield, CheckCircle, XCircle, Clock,
   Eye, Download, Search, Activity, DollarSign, Check,
   ShoppingCart, ChevronRight
@@ -19,9 +20,7 @@ import {
 
 type AdminView = 'overview' | 'doctors' | 'pharmacists' | 'pharmacies' | 'analytics' | 'notifications' | 'settings';
 
-interface AdminPortalProps {
-  onBack: () => void;
-}
+interface AdminPortalProps {}
 
 const dailyPrescriptions = [
   { date: 'Jan 10', count: 245 }, { date: 'Jan 11', count: 312 },
@@ -132,7 +131,7 @@ type MetricCounts = { doctors: number; pharmacists: number; pharmacies: number; 
 type DailyPoint = { date: string; count: number };
 type TopDoctorPoint = { name: string; prescriptions: number };
 
-export function AdminPortal({ onBack }: AdminPortalProps) {
+export function AdminPortal({}: AdminPortalProps) {
   const [activeView, setActiveView] = useState<AdminView>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [doctorList, setDoctorList] = useState<DoctorProfile[]>(doctors);
@@ -337,59 +336,25 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
     { id: 'settings' as AdminView, label: 'Settings', icon: Settings },
   ];
 
-  const Sidebar = () => (
-    <div style={{ backgroundColor: '#1A1A2E', width: '260px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div className="p-4 flex items-center justify-between border-b" style={{ borderColor: '#2D2D4E' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#FF6B6B' }}>
-            <Heart className="w-4 h-4 text-white" />
-          </div>
-          <span style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>Medi<span style={{ color: '#FF6B6B' }}>Track</span></span>
-        </div>
-        <button className="lg:hidden text-gray-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
-          <X className="w-5 h-5" />
-        </button>
-      </div>
+  const sidebarMeta = {
+    brandLabel: 'Medi',
+    brandAccent: 'Track',
+    brandTextColor: 'white',
+    brandAccentColor: '#FF6B6B',
+    background: '#1A1A2E',
+    borderColor: '#2D2D4E',
+    userName: 'Super Admin',
+    userRole: 'Admin',
+    userSubtitle: 'admin@meditrack.in',
+    userIcon: <Shield className="w-5 h-5 text-white" />,
+    userIconBg: '#FF6B6B',
+    navTextColor: '#94A3B8',
+    navHoverBg: '#2D2D4E',
+    activeBg: '#FF6B6B',
+    activeTextColor: 'white',
+  };
 
-      <div className="p-4 border-b" style={{ borderColor: '#2D2D4E' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FF6B6B' }}>
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <p style={{ color: 'white', fontWeight: 600, fontSize: '0.875rem' }}>Super Admin</p>
-            <p style={{ color: '#94A3B8', fontSize: '0.75rem' }}>admin@meditrack.in</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(item => (
-          <button key={item.id}
-            onClick={() => { setActiveView(item.id); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-            style={{ backgroundColor: activeView === item.id ? '#FF6B6B' : 'transparent', color: activeView === item.id ? 'white' : '#94A3B8' }}
-            onMouseEnter={e => { if (activeView !== item.id) e.currentTarget.style.backgroundColor = '#2D2D4E'; }}
-            onMouseLeave={e => { if (activeView !== item.id) e.currentTarget.style.backgroundColor = 'transparent'; }}>
-            <item.icon className="w-4 h-4 shrink-0" />
-            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item.label}</span>
-            {item.badge !== undefined && item.badge > 0 && (
-              <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: activeView === item.id ? 'rgba(255,255,255,0.25)' : '#FF6B6B', color: 'white', minWidth: '20px', textAlign: 'center' }}>
-                {item.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-      <div className="p-4 border-t" style={{ borderColor: '#2D2D4E' }}>
-        <button onClick={onBack} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-900/20 transition-colors">
-          <LogOut className="w-4 h-4" />
-          <span style={{ fontSize: '0.875rem' }}>Back to Home</span>
-        </button>
-      </div>
-    </div>
-  );
+  const unreadNotifications = notifList.filter(n => !n.read).length;
 
   const OverviewView = () => (
     <div className="space-y-6">
@@ -840,31 +805,18 @@ export function AdminPortal({ onBack }: AdminPortalProps) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F8FAFC' }}>
-      <div className="hidden lg:block shrink-0"><Sidebar /></div>
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="fixed inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setSidebarOpen(false)}></div>
-          <div className="relative z-50"><Sidebar /></div>
-        </div>
-      )}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 lg:px-6 py-3 flex items-center gap-3">
-          <button className="lg:hidden p-2 rounded-xl hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-5 h-5 text-gray-600" />
-          </button>
-          <div className="flex-1">
-            <p style={{ fontWeight: 600, color: '#1A1A2E', fontSize: '0.95rem' }}>Admin Dashboard</p>
-          </div>
-          <button className="relative p-2 rounded-xl hover:bg-gray-100" onClick={() => setActiveView('notifications')}>
-            <Bell className="w-5 h-5 text-gray-600" />
-            {notifList.filter(n => !n.read).length > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: '#FF6B6B' }}></span>
-            )}
-          </button>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6" style={{ opacity: loading ? 0.5 : 1 }}>{views[activeView]}</main>
-      </div>
-    </div>
+    <PortalLayout
+      title="Admin Dashboard"
+      activeView={activeView}
+      onNavItemClick={setActiveView}
+      navItems={navItems}
+      notificationCount={unreadNotifications}
+      onNotificationClick={() => setActiveView('notifications')}
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+      sidebarMeta={sidebarMeta}
+    >
+      <div style={{ opacity: loading ? 0.5 : 1 }}>{views[activeView]}</div>
+    </PortalLayout>
   );
 }
