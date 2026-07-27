@@ -5,9 +5,10 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
+import { PortalLayout } from './PortalLayout';
 import {
   LayoutDashboard, Clock, CheckCircle, Package, ShoppingCart,
-  Users, Bell, User, BarChart2, LogOut, Menu, X, Heart,
+  Users, Bell, User, BarChart2, X, Heart,
   Search, TrendingUp, AlertCircle, Truck, FileText,
   Eye, Check, XCircle, DollarSign, Plus, RefreshCw
 } from 'lucide-react';
@@ -18,9 +19,7 @@ import {
 
 type PharmView = 'dashboard' | 'incoming' | 'verified' | 'inventory' | 'orders' | 'customers' | 'notifications' | 'reports' | 'profile';
 
-interface PharmacistPortalProps {
-  onBack: () => void;
-}
+interface PharmacistPortalProps {}
 
 type WeeklyOrders = { day: string; orders: number; revenue: number };
 type MonthlyRevenue = { month: string; revenue: number };
@@ -56,7 +55,7 @@ const statusColor = (status: string) => {
   return map[status] || { bg: '#F9FAFB', text: '#6B7280' };
 };
 
-export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
+export function PharmacistPortal({}: PharmacistPortalProps) {
   const [activeView, setActiveView] = useState<PharmView>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,59 +101,25 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
     { id: 'profile' as PharmView, label: 'Profile', icon: User },
   ];
 
-  const Sidebar = () => (
-    <div style={{ backgroundColor: '#134e4a', width: '270px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div className="p-4 flex items-center justify-between border-b" style={{ borderColor: '#0f3d39' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#00B894' }}>
-            <Heart className="w-4 h-4 text-white" />
-          </div>
-          <span style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>Medi<span style={{ color: '#00B894' }}>Track</span></span>
-        </div>
-        <button className="lg:hidden text-teal-300 hover:text-white" onClick={() => setSidebarOpen(false)}>
-          <X className="w-5 h-5" />
-        </button>
-      </div>
+  const sidebarMeta = {
+    brandLabel: 'Medi',
+    brandAccent: 'Track',
+    brandTextColor: 'white',
+    brandAccentColor: '#00B894',
+    background: '#134e4a',
+    borderColor: '#0f3d39',
+    userName: 'Priya Sharma',
+    userRole: 'Senior Pharmacist',
+    userSubtitle: 'MedPlus Pharmacy',
+    userIcon: <Package className="w-5 h-5 text-white" />,
+    userIconBg: '#00B894',
+    navTextColor: '#99D6CC',
+    navHoverBg: '#0f3d39',
+    activeBg: '#00B894',
+    activeTextColor: 'white',
+  };
 
-      <div className="p-4 border-b" style={{ borderColor: '#0f3d39' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00B894' }}>
-            <Package className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <p style={{ color: 'white', fontWeight: 600, fontSize: '0.875rem' }}>Priya Sharma</p>
-            <p style={{ color: '#99D6CC', fontSize: '0.75rem' }}>Senior Pharmacist</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(item => (
-          <button key={item.id}
-            onClick={() => { setActiveView(item.id); setSidebarOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-            style={{ backgroundColor: activeView === item.id ? '#00B894' : 'transparent', color: activeView === item.id ? 'white' : '#99D6CC' }}
-            onMouseEnter={e => { if (activeView !== item.id) e.currentTarget.style.backgroundColor = '#0f3d39'; }}
-            onMouseLeave={e => { if (activeView !== item.id) e.currentTarget.style.backgroundColor = 'transparent'; }}>
-            <item.icon className="w-4 h-4 shrink-0" />
-            <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item.label}</span>
-            {item.badge !== undefined && item.badge > 0 && (
-              <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: activeView === item.id ? 'rgba(255,255,255,0.25)' : '#FF6B6B', color: 'white', minWidth: '20px', textAlign: 'center' }}>
-                {item.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-      <div className="p-4 border-t" style={{ borderColor: '#0f3d39' }}>
-        <button onClick={onBack} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-300 hover:bg-red-900/20 transition-colors">
-          <LogOut className="w-4 h-4" />
-          <span style={{ fontSize: '0.875rem' }}>Back to Home</span>
-        </button>
-      </div>
-    </div>
-  );
+  const unreadNotifications = notifList.filter(n => !n.read).length;
 
   const DashboardView = () => (
     <div className="space-y-6">
@@ -652,31 +617,18 @@ export function PharmacistPortal({ onBack }: PharmacistPortalProps) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F8FAFC' }}>
-      <div className="hidden lg:block shrink-0"><Sidebar /></div>
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="fixed inset-0" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setSidebarOpen(false)}></div>
-          <div className="relative z-50"><Sidebar /></div>
-        </div>
-      )}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 lg:px-6 py-3 flex items-center gap-3">
-          <button className="lg:hidden p-2 rounded-xl hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-5 h-5 text-gray-600" />
-          </button>
-          <div className="flex-1">
-            <p style={{ fontWeight: 600, color: '#1A1A2E', fontSize: '0.95rem' }}>Pharmacist Portal</p>
-          </div>
-          <button className="relative p-2 rounded-xl hover:bg-gray-100" onClick={() => setActiveView('notifications')}>
-            <Bell className="w-5 h-5 text-gray-600" />
-            {notifList.filter(n => !n.read).length > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: '#FF6B6B' }}></span>
-            )}
-          </button>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{views[activeView]}</main>
-      </div>
-    </div>
+    <PortalLayout
+      title="Pharmacist Portal"
+      activeView={activeView}
+      onNavItemClick={setActiveView}
+      navItems={navItems}
+      notificationCount={unreadNotifications}
+      onNotificationClick={() => setActiveView('notifications')}
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+      sidebarMeta={sidebarMeta}
+    >
+      {views[activeView]}
+    </PortalLayout>
   );
 }
